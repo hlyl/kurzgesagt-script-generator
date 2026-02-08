@@ -1,18 +1,19 @@
 """File handling utilities."""
 
-from pathlib import Path
-from typing import Optional, List
 import shutil
-import json
+from pathlib import Path
+from typing import List
+
+from .validators import ValidationError, validate_project_identifier
 
 
 def ensure_directory(path: Path) -> Path:
     """
     Ensure directory exists, create if necessary.
-    
+
     Args:
         path: Directory path
-        
+
     Returns:
         The created/existing path
     """
@@ -23,7 +24,7 @@ def ensure_directory(path: Path) -> Path:
 def safe_write_text(path: Path, content: str, backup: bool = True) -> None:
     """
     Safely write text to file with optional backup.
-    
+
     Args:
         path: File path
         content: Content to write
@@ -31,53 +32,57 @@ def safe_write_text(path: Path, content: str, backup: bool = True) -> None:
     """
     # Create backup if file exists
     if backup and path.exists():
-        backup_path = path.with_suffix(path.suffix + '.backup')
+        backup_path = path.with_suffix(path.suffix + ".backup")
         shutil.copy2(path, backup_path)
-    
+
     # Ensure parent directory exists
     ensure_directory(path.parent)
-    
+
     # Write content
-    path.write_text(content, encoding='utf-8')
+    path.write_text(content, encoding="utf-8")
 
 
 def list_project_directories(base_path: Path) -> List[str]:
     """
     List all project directories.
-    
+
     Args:
         base_path: Base projects directory
-        
+
     Returns:
         List of project directory names
     """
     if not base_path.exists():
         return []
-    
+
     return [
-        d.name for d in base_path.iterdir()
-        if d.is_dir() and not d.name.startswith('.')
+        d.name for d in base_path.iterdir() if d.is_dir() and not d.name.startswith(".")
     ]
 
 
 def get_project_path(base_path: Path, project_name: str) -> Path:
     """
     Get full path to project directory.
-    
+
     Args:
         base_path: Base projects directory
         project_name: Project name
-        
+
     Returns:
         Full project path
     """
-    return base_path / project_name
+    safe_name = validate_project_identifier(project_name)
+    project_path = (base_path / safe_name).resolve()
+    base_resolved = base_path.resolve()
+    if base_resolved not in project_path.parents and project_path != base_resolved:
+        raise ValidationError("Project path escapes base directory")
+    return project_path
 
 
 def delete_project(base_path: Path, project_name: str) -> None:
     """
     Delete a project directory.
-    
+
     Args:
         base_path: Base projects directory
         project_name: Project name to delete

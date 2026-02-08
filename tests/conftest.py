@@ -1,13 +1,14 @@
 """Pytest configuration and fixtures."""
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
-from datetime import datetime
+import tempfile
+from pathlib import Path
 
-from src.kurzgesagt.models import ProjectConfig, ProjectMetadata, Scene, Shot
+import pytest
+
 from src.kurzgesagt.core import ProjectManager, ScriptGenerator
+from src.kurzgesagt.models import ProjectConfig, ProjectMetadata, Scene, Shot
+from tests.mocks.anthropic_mock import MockAnthropicClient
 
 
 @pytest.fixture
@@ -22,10 +23,7 @@ def temp_dir():
 def sample_project_config():
     """Create sample project configuration."""
     return ProjectConfig(
-        metadata=ProjectMetadata(
-            title="Test Project",
-            author="Test Author"
-        )
+        metadata=ProjectMetadata(title="Test Project", author="Test Author")
     )
 
 
@@ -44,9 +42,9 @@ def sample_scene():
                 duration=5,
                 description="Test description",
                 image_prompt="Test image prompt",
-                video_prompt="Test video prompt"
+                video_prompt="Test video prompt",
             )
-        ]
+        ],
     )
 
 
@@ -63,5 +61,22 @@ def script_generator(temp_dir):
     templates_src = Path(__file__).parent.parent / "templates"
     templates_dst = temp_dir / "templates"
     shutil.copytree(templates_src, templates_dst)
-    
+
     return ScriptGenerator(templates_dir=templates_dst)
+
+
+@pytest.fixture
+def templates_dir(temp_dir):
+    """Provide templates directory copied into temp dir."""
+    templates_src = Path(__file__).parent.parent / "templates"
+    templates_dst = temp_dir / "templates"
+    shutil.copytree(templates_src, templates_dst)
+    return templates_dst
+
+
+@pytest.fixture
+def mock_anthropic_client(monkeypatch):
+    """Fixture to mock Anthropic client."""
+    monkeypatch.setattr(
+        "src.kurzgesagt.core.scene_parser.Anthropic", MockAnthropicClient
+    )

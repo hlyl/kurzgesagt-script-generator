@@ -5,6 +5,7 @@ from enum import Enum
 
 class AspectRatio(str, Enum):
     """Supported video aspect ratios."""
+
     RATIO_16_9 = "16:9"
     RATIO_9_16 = "9:16"
     RATIO_3_2 = "3:2"
@@ -14,6 +15,7 @@ class AspectRatio(str, Enum):
 
 class ModelType(str, Enum):
     """Supported AI video generation models."""
+
     VEO_3_2 = "veo_3_2"
     KLING_2_5 = "kling_2_5"
     SORA_2 = "sora_2"
@@ -25,6 +27,7 @@ class ModelType(str, Enum):
 
 class ShotComplexity(str, Enum):
     """Shot structure complexity levels."""
+
     SIMPLE = "simple"
     NESTED = "nested"
     HYBRID = "hybrid"
@@ -32,6 +35,7 @@ class ShotComplexity(str, Enum):
 
 class ColorPalette(str, Enum):
     """Color palette options."""
+
     VIBRANT = "vibrant"
     WARM = "warm"
     COOL = "cool"
@@ -41,6 +45,7 @@ class ColorPalette(str, Enum):
 
 class LineWork(str, Enum):
     """Line work styles."""
+
     MINIMAL_OUTLINES = "minimal_outlines"
     BOLD_STROKES = "bold_strokes"
     NO_OUTLINES = "no_outlines"
@@ -48,6 +53,7 @@ class LineWork(str, Enum):
 
 class MotionPacing(str, Enum):
     """Motion pacing options."""
+
     SMOOTH = "smooth"
     ENERGETIC = "energetic"
     CONTEMPLATIVE = "contemplative"

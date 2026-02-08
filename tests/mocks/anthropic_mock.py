@@ -1,24 +1,26 @@
 """Mock for Anthropic API."""
 
-from unittest.mock import Mock
 import json
+from unittest.mock import Mock
+
+import pytest
 
 
 class MockAnthropicResponse:
     """Mock Anthropic API response."""
-    
+
     def __init__(self, content_text: str):
         self.content = [Mock(text=content_text)]
 
 
 class MockAnthropicClient:
     """Mock Anthropic client for testing."""
-    
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.messages = Mock()
         self.messages.create = Mock(side_effect=self._mock_create)
-    
+
     def _mock_create(self, **kwargs):
         """Mock message creation with sample response."""
         sample_response = {
@@ -37,13 +39,13 @@ class MockAnthropicClient:
                             "key_elements": ["element1"],
                             "image_prompt": "Test image prompt",
                             "video_prompt": "Test video prompt",
-                            "is_nested": False
+                            "is_nested": False,
                         }
-                    ]
+                    ],
                 }
             ]
         }
-        
+
         return MockAnthropicResponse(json.dumps(sample_response))
 
 
