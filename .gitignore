@@ -50,6 +50,7 @@ htmlcov/
 projects/*
 !projects/.gitkeep
 !projects/example_data_classification/
+logs/*
 
 # Exports
 exports/
