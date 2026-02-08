@@ -1,13 +1,11 @@
-"""Scene parsing using Claude API."""
+"""Scene parsing using LLM providers."""
 
 import json
 from typing import Any, Dict, List, Optional, cast
-
-from anthropic import Anthropic, APIError
 from pydantic import ValidationError as PydanticValidationError
 
-from ..config import settings
 from ..models import Scene, Shot, StyleGuide
+from .providers import ProviderConfigError, SceneParsingProvider, get_scene_provider
 
 
 class SceneParsingError(Exception):
@@ -17,23 +15,30 @@ class SceneParsingError(Exception):
 
 
 class SceneParser:
-    """Parses voice-over scripts into structured scenes using Claude."""
+    """Parses voice-over scripts into structured scenes using providers."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        provider: Optional[SceneParsingProvider] = None,
+        provider_name: Optional[str] = None,
+    ):
         """
         Initialize scene parser.
 
         Args:
             api_key: Anthropic API key (defaults to settings)
         """
-        resolved_key = api_key or settings.anthropic_api_key
-        if not resolved_key or resolved_key == "your_api_key_here":
-            raise ValueError(
-                "ANTHROPIC_API_KEY must be set to use Claude scene parsing."
-            )
-        self.client = Anthropic(api_key=resolved_key)
-        self.model = settings.anthropic_model
-        self.max_tokens = settings.anthropic_max_tokens
+        if provider is not None:
+            self.provider = provider
+        else:
+            try:
+                self.provider = get_scene_provider(
+                    provider_name=provider_name,
+                    api_key=api_key,
+                )
+            except ProviderConfigError as exc:
+                raise ValueError(str(exc)) from exc
 
     def parse_script(
         self,
@@ -61,15 +66,7 @@ class SceneParser:
                 voice_over, style_guide, shot_complexity
             )
 
-            # Call Claude API
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                messages=[{"role": "user", "content": prompt}],
-            )
-
-            # Extract JSON from response
-            response_text = self._extract_text(response.content)
+            response_text = self.provider.complete(prompt)
             scenes_data = self._extract_json(response_text)
 
             # Convert to Scene objects
@@ -77,8 +74,8 @@ class SceneParser:
 
             return scenes
 
-        except APIError as e:
-            raise SceneParsingError(f"Claude API error: {str(e)}") from e
+        except RuntimeError as e:
+            raise SceneParsingError(str(e)) from e
         except (json.JSONDecodeError, KeyError, PydanticValidationError) as e:
             raise SceneParsingError(f"Failed to parse response: {str(e)}") from e
 
@@ -159,14 +156,6 @@ class SceneParser:
             "- Use Kurzgesagt visual language: flat, iconic, metaphorical",
         ]
         return "\n".join(lines)
-
-    def _extract_text(self, content: List[Any]) -> str:
-        """Extract the first text block from Claude response content."""
-        for block in content:
-            text = getattr(block, "text", None)
-            if isinstance(text, str):
-                return text
-        raise SceneParsingError("Claude response did not contain text content.")
 
     def _extract_json(self, text: str) -> Dict[str, Any]:
         """Extract JSON from Claude's response, handling markdown code blocks."""

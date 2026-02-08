@@ -78,5 +78,6 @@ def templates_dir(temp_dir):
 def mock_anthropic_client(monkeypatch):
     """Fixture to mock Anthropic client."""
     monkeypatch.setattr(
-        "src.kurzgesagt.core.scene_parser.Anthropic", MockAnthropicClient
+        "src.kurzgesagt.core.providers.anthropic_provider.Anthropic",
+        MockAnthropicClient,
     )

@@ -16,4 +16,4 @@ def test_scene_parser_requires_api_key_when_used(monkeypatch):
 def test_scene_parser_accepts_explicit_api_key(mock_anthropic_client):
     """SceneParser should initialize when an API key is provided."""
     parser = SceneParser(api_key="test_key")
-    assert parser.client.api_key == "test_key"
+    assert parser.provider.client.api_key == "test_key"

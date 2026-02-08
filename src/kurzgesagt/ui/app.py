@@ -1,11 +1,24 @@
 """Streamlit UI for Kurzgesagt Script Generator."""
 
+from __future__ import annotations
+
+import sys
+from pathlib import Path
 
 import streamlit as st
 
-from ..config import settings
-from ..core import ProjectManager, PromptOptimizer, SceneParser, ScriptGenerator
-from ..models import (
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from kurzgesagt.config import settings
+from kurzgesagt.core import (
+    ProjectManager,
+    PromptOptimizer,
+    SceneParser,
+    ScriptGenerator,
+)
+from kurzgesagt.models import (
     AspectRatio,
     ColorPalette,
     LineWork,
@@ -14,7 +27,7 @@ from ..models import (
     ProjectConfig,
     ShotComplexity,
 )
-from ..utils import (
+from kurzgesagt.utils import (
     ValidationError,
     estimate_reading_time,
     validate_optional_text,
@@ -72,7 +85,7 @@ def init_session_state() -> None:
         try:
             st.session_state.scene_parser = SceneParser()
         except Exception as e:
-            st.warning(f"Claude API not configured: {e}")
+            st.warning(f"Scene parser not configured: {e}")
             st.session_state.scene_parser = None
 
     if "prompt_optimizer" not in st.session_state:
@@ -403,7 +416,9 @@ def render_script_tab(config: ProjectConfig) -> None:
     st.subheader("🤖 Auto-Generate Scenes")
 
     if not st.session_state.scene_parser:
-        st.warning("⚠️ Claude API not configured. Set ANTHROPIC_API_KEY in .env file.")
+        st.warning(
+            "⚠️ Scene parser not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env."
+        )
     else:
         if st.button("Parse Script into Scenes", type="primary"):
             if not config.voice_over_script:

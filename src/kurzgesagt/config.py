@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = Field(
         default=None, description="Anthropic API key"
     )
+    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
 
     # Paths
     projects_dir: Path = Field(default=Path("./projects"))
@@ -33,6 +34,12 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-sonnet-4-20250514"
     anthropic_max_tokens: int = 4000
     anthropic_timeout: int = 60
+
+    openai_model: str = "gpt-4o-mini"
+    openai_max_tokens: int = 4000
+    openai_timeout: int = 60
+
+    scene_parser_provider: str = "anthropic"
 
     # Streamlit
     streamlit_server_port: int = 8501
@@ -49,6 +56,16 @@ class Settings(BaseSettings):
     @classmethod
     def validate_api_key(cls, v: Optional[str]) -> Optional[str]:
         """Validate API key when provided."""
+        if v is None:
+            return None
+        if not v or v == "your_api_key_here":
+            return None
+        return v
+
+    @field_validator("openai_api_key")
+    @classmethod
+    def validate_openai_key(cls, v: Optional[str]) -> Optional[str]:
+        """Validate OpenAI API key when provided."""
         if v is None:
             return None
         if not v or v == "your_api_key_here":
