@@ -408,11 +408,14 @@ def render_script_tab(config: ProjectConfig) -> None:
     """Render script editing interface."""
     st.header("Voice-Over Script")
 
+    if "voice_over_text" not in st.session_state:
+        st.session_state.voice_over_text = config.voice_over_script
+
     voice_over_input = st.text_area(
         "Paste your voice-over script here",
-        value=config.voice_over_script,
         height=400,
         help="Your complete voice-over narration",
+        key="voice_over_text",
     )
 
     try:
@@ -526,31 +529,6 @@ def render_generate_tab(config: ProjectConfig) -> None:
     ):
         export_complete_project(config)
 
-    st.divider()
-
-    st.subheader("🎨 Generate Scene Images")
-    st.caption("Generate one image per shot and save to the project folder.")
-    if st.button("Generate Scene Images", use_container_width=True):
-        generate_scene_images(config)
-
-    if st.button("Generate First Image", use_container_width=True):
-        generate_first_image(config)
-
-    with st.expander("View image generation prompts", expanded=False):
-        prompt_lines = []
-        for scene in config.scenes:
-            for shot in scene.shots:
-                prompt_lines.append(
-                    f"Scene {scene.number} Shot {shot.number}: {shot.image_prompt}"
-                )
-        st.text_area(
-            "Image Prompts",
-            value="\n\n".join(prompt_lines) if prompt_lines else "",
-            height=300,
-            label_visibility="collapsed",
-            key="image_prompt_preview",
-        )
-
     render_generated_preview()
 
 
@@ -576,15 +554,17 @@ def render_images_tab(config: ProjectConfig) -> None:
 
     source_text = st.text_area(
         "Script for image generation",
-        value=st.session_state.get("image_source_text", ""),
         height=220,
-        key="image_source_text_area",
+        key="image_source_text",
     )
-    st.session_state.image_source_text = source_text
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Parse Script Into Scenes", use_container_width=True):
+        if st.button(
+            "Parse Script Into Scenes",
+            use_container_width=True,
+            key="images_parse_script",
+        ):
             if not source_text.strip():
                 st.warning("⚠️ Please provide script content first.")
             elif not st.session_state.scene_parser:
@@ -606,7 +586,11 @@ def render_images_tab(config: ProjectConfig) -> None:
                     st.error(f"❌ Parsing failed: {exc}")
 
     with col2:
-        if st.button("Clear Script", use_container_width=True):
+        if st.button(
+            "Clear Script",
+            use_container_width=True,
+            key="images_clear_script",
+        ):
             st.session_state.image_source_text = ""
             st.rerun()
 
@@ -615,10 +599,18 @@ def render_images_tab(config: ProjectConfig) -> None:
     st.subheader("Generate Images")
     st.caption("Generate one image per shot and save to the project folder.")
 
-    if st.button("Generate Scene Images", use_container_width=True):
+    if st.button(
+        "Generate Scene Images",
+        use_container_width=True,
+        key="images_generate_all",
+    ):
         generate_scene_images(config)
 
-    if st.button("Generate First Image", use_container_width=True):
+    if st.button(
+        "Generate First Image",
+        use_container_width=True,
+        key="images_generate_first",
+    ):
         generate_first_image(config)
 
     with st.expander("View image generation prompts", expanded=False):
@@ -669,7 +661,6 @@ def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
         with st.expander(f"Preview {doc_type.title()}", expanded=True):
             edited_content = st.text_area(
                 "Preview",
-                value=st.session_state[preview_key],
                 height=400,
                 label_visibility="collapsed",
                 key=preview_key,
@@ -733,7 +724,6 @@ def render_generated_preview() -> None:
     with st.expander(f"Preview {str(doc_type).title()}", expanded=False):
         edited_content = st.text_area(
             "Preview",
-            value=st.session_state[preview_key],
             height=400,
             label_visibility="collapsed",
             key=preview_key,

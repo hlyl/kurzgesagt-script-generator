@@ -92,3 +92,120 @@ A minimalist illustration featuring a bike on a simple porch with clean outlines
 
 Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
 2026-02-08 14:22:50,523 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 18:25:56,408 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=hybrid)
+2026-02-08 18:26:32,936 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
+2026-02-08 18:26:32,936 | INFO | kurzgesagt.scene_parser | Parsed scenes=7 shots=20
+2026-02-08 18:29:26,844 | INFO | kurzgesagt.scene_parser | Parsing script (chars=28498, shots=hybrid)
+2026-02-08 18:30:03,960 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=30834)
+2026-02-08 18:30:03,960 | INFO | kurzgesagt.scene_parser | Parsed scenes=7 shots=20
+2026-02-08 18:30:11,381 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A split-screen illustration showing a simplistic bike resting on a porch with a lock and a luxurious bank vault in contrast. The porch scene should be sunny, and the bank vault should be dark and imposing. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 18:30:11,381 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 18:43:39,189 | INFO | kurzgesagt.scene_parser | Parsing script (chars=28498, shots=simple)
+2026-02-08 18:44:20,849 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=30834)
+2026-02-08 18:44:20,849 | INFO | kurzgesagt.scene_parser | Parsed scenes=7 shots=20
+2026-02-08 18:45:26,500 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=hybrid)
+2026-02-08 18:45:47,837 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
+2026-02-08 18:45:47,837 | INFO | kurzgesagt.scene_parser | Parsed scenes=4 shots=12
+2026-02-08 18:47:09,015 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=simple)
+2026-02-08 18:47:48,235 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
+2026-02-08 18:47:48,237 | ERROR | kurzgesagt.scene_parser | Failed to parse provider response
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 202, in _extract_json
+    return cast(Dict[str, Any], json.loads(text))
+                                ~~~~~~~~~~^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 268 column 24 (char 19460)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 82, in parse_script
+    scenes_data = self._extract_json(response_text)
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 206, in _extract_json
+    return cast(Dict[str, Any], json.loads(cleaned))
+                                ~~~~~~~~~~^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 268 column 24 (char 19460)
+2026-02-08 18:54:45,821 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=simple)
+2026-02-08 18:55:24,189 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
+2026-02-08 18:55:24,193 | ERROR | kurzgesagt.scene_parser | Failed to parse provider response
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 202, in _extract_json
+    return cast(Dict[str, Any], json.loads(text))
+                                ~~~~~~~~~~^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 289 column 27 (char 19251)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 207, in _extract_json
+    return cast(Dict[str, Any], json.loads(cleaned))
+                                ~~~~~~~~~~^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 289 column 27 (char 19251)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 82, in parse_script
+    scenes_data = self._extract_json(response_text)
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 210, in _extract_json
+    return cast(Dict[str, Any], json.loads(repaired))
+                                ~~~~~~~~~~^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 289 column 186 (char 19410)
+2026-02-08 18:57:43,641 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=simple)
+2026-02-08 18:58:08,270 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
+2026-02-08 18:58:08,271 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=14
+2026-02-08 19:03:08,071 | INFO | kurzgesagt.scene_parser | Parsing script (chars=22168, shots=simple)
+2026-02-08 19:03:34,927 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=24504)
+2026-02-08 19:03:34,927 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=14
+2026-02-08 19:03:37,952 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A minimalist flat illustration showing a bike on a porch in the foreground and a distant bank vault in the background. Use pastel colors with clean outlines and clear negative space around elements. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 19:03:37,952 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K

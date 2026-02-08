@@ -203,7 +203,17 @@ class SceneParser:
         except json.JSONDecodeError:
             extracted = self._extract_json_text(text)
             cleaned = self._sanitize_json_text(extracted)
-            return cast(Dict[str, Any], json.loads(cleaned))
+            try:
+                return cast(Dict[str, Any], json.loads(cleaned))
+            except json.JSONDecodeError:
+                repaired = self._repair_json_text(cleaned)
+                try:
+                    return cast(Dict[str, Any], json.loads(repaired))
+                except json.JSONDecodeError:
+                    return cast(
+                        Dict[str, Any],
+                        self._parse_json_with_truncation(repaired),
+                    )
 
     @staticmethod
     def _sanitize_json_text(text: str) -> str:
@@ -272,6 +282,58 @@ class SceneParser:
                     return text[start : idx + 1]
 
         return text[start:]
+
+    @staticmethod
+    def _repair_json_text(text: str) -> str:
+        """Attempt to repair truncated JSON by closing strings/braces."""
+        in_string = False
+        escape = False
+        depth = 0
+        last_complete_index = None
+
+        for idx, ch in enumerate(text):
+            if escape:
+                escape = False
+                continue
+            if ch == "\\":
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    last_complete_index = idx
+
+        if last_complete_index is not None:
+            return text[: last_complete_index + 1]
+
+        repaired = text
+        if in_string:
+            repaired += '"'
+        if depth > 0:
+            repaired += "}" * depth
+        return repaired
+
+    @staticmethod
+    def _parse_json_with_truncation(text: str) -> Dict[str, Any]:
+        """Try to parse JSON by truncating to the last valid closing brace."""
+        end = len(text)
+        while end > 0:
+            candidate_end = text.rfind("}", 0, end)
+            if candidate_end == -1:
+                break
+            candidate = text[: candidate_end + 1]
+            try:
+                return cast(Dict[str, Any], json.loads(candidate))
+            except json.JSONDecodeError:
+                end = candidate_end
+        return cast(Dict[str, Any], json.loads(text))
 
     def _json_to_scenes(self, data: dict) -> List[Scene]:
         """Convert JSON data to Scene objects."""
