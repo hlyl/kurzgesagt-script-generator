@@ -1,0 +1,74 @@
+2026-02-08 10:45:49,366 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 10:46:12,131 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5652)
+2026-02-08 10:46:12,131 | INFO | kurzgesagt.scene_parser | Parsed scenes=8 shots=16
+2026-02-08 10:51:02,337 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 10:51:30,443 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5652)
+2026-02-08 10:51:30,444 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=20
+2026-02-08 10:55:26,692 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 10:55:32,828 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5652)
+2026-02-08 10:55:32,829 | INFO | kurzgesagt.scene_parser | Parsed scenes=1 shots=3
+2026-02-08 11:09:40,727 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 11:09:58,723 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5652)
+2026-02-08 11:09:58,723 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=12
+2026-02-08 11:13:44,422 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 11:16:32,177 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 11:22:49,894 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 11:23:36,957 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 11:25:46,215 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 11:27:44,962 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 12:05:14,066 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:05:30,983 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5651)
+2026-02-08 12:05:30,984 | INFO | kurzgesagt.scene_parser | Parsed scenes=4 shots=11
+2026-02-08 12:08:26,725 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 12:25:59,353 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:26:09,212 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5641)
+2026-02-08 12:26:09,212 | INFO | kurzgesagt.scene_parser | Parsed scenes=2 shots=6
+2026-02-08 12:26:43,812 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 12:32:39,080 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:33:02,844 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5641)
+2026-02-08 12:33:02,844 | INFO | kurzgesagt.scene_parser | Parsed scenes=9 shots=17
+2026-02-08 12:33:39,030 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 12:41:00,181 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:41:20,722 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5649)
+2026-02-08 12:41:20,722 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=12
+2026-02-08 12:42:11,838 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 12:46:33,812 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:47:07,535 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5645)
+2026-02-08 12:47:07,537 | ERROR | kurzgesagt.scene_parser | Failed to parse provider response
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 197, in _extract_json
+    return cast(Dict[str, Any], json.loads(text))
+                                ~~~~~~~~~~^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 297 column 27 (char 18976)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 81, in parse_script
+    scenes_data = self._extract_json(response_text)
+  File "/home/vtxgaming/dev/kurzgesagt-script-generator/src/kurzgesagt/core/scene_parser.py", line 200, in _extract_json
+    return cast(Dict[str, Any], json.loads(cleaned))
+                                ~~~~~~~~~~^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vtxgaming/.local/share/uv/python/cpython-3.13.7-linux-x86_64-gnu/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 297 column 27 (char 18976)
+2026-02-08 12:48:59,444 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:49:18,521 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5645)
+2026-02-08 12:49:18,521 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=11
+2026-02-08 12:49:48,789 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K

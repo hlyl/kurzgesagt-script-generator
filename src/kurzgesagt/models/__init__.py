@@ -2,30 +2,36 @@
 
 from .enums import (
     AspectRatio,
+    ImageAspectRatio,
+    ImageResolution,
+    ModelType,
+    ShotComplexity,
     ColorPalette,
     LineWork,
-    ModelType,
     MotionPacing,
-    ShotComplexity,
+    Aesthetic,
 )
+from .scene import Shot, Scene
 from .project import (
+    StyleGuide,
     CharacterConfig,
     Environment,
-    ProjectConfig,
-    ProjectMetadata,
-    StyleGuide,
     TechnicalSpecs,
+    ProjectMetadata,
+    ProjectConfig,
 )
-from .scene import Scene, Shot
 
 __all__ = [
     # Enums
     "AspectRatio",
+    "ImageAspectRatio",
+    "ImageResolution",
     "ModelType",
     "ShotComplexity",
     "ColorPalette",
     "LineWork",
     "MotionPacing",
+    "Aesthetic",
     # Scene models
     "Shot",
     "Scene",

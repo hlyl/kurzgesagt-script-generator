@@ -12,10 +12,10 @@ Before proceeding to full script generation, please confirm:
 ### 1️⃣ Characters
 - Named characters: **{{ 'Yes' if project.characters.use_named_characters else 'No' }}**
 - Avoid close-ups: **{{ 'Yes' if project.characters.avoid_closeups else 'No' }}**
-- Style: **{{ project.characters.style | replace('_', ' ') | title }}**
+- Style: **{{ project.characters.style.value }} — {{ project.characters.style.description }}**
 
 ### 2️⃣ Animation Style
-- **{{ project.style.aesthetic }}**
+- **{{ project.style.aesthetic.value }} — {{ project.style.aesthetic.description }}**
 - Colors: {{ project.style.color_palette.value | capitalize }}
 - Line work: {{ project.style.line_work.value | replace('_', ' ') | title }}
 - Motion: {{ project.style.motion_pacing.value | capitalize }}

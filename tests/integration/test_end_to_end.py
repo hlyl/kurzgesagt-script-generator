@@ -14,7 +14,7 @@ def test_complete_workflow(temp_dir, templates_dir, mock_anthropic_client):
     config.voice_over_script = "This is a test script for integration testing."
 
     # 3. Parse scenes
-    parser = SceneParser(api_key="test_key")
+    parser = SceneParser(api_key="test_key", provider_name="anthropic")
     scenes = parser.parse_script(
         voice_over=config.voice_over_script, style_guide=config.style
     )

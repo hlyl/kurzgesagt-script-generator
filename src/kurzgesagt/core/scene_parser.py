@@ -1,11 +1,15 @@
 """Scene parsing using LLM providers."""
 
 import json
+import re
 from typing import Any, Dict, List, Optional, cast
 from pydantic import ValidationError as PydanticValidationError
 
 from ..models import Scene, Shot, StyleGuide
+from ..utils import get_logger
 from .providers import ProviderConfigError, SceneParsingProvider, get_scene_provider
+
+logger = get_logger("scene_parser")
 
 
 class SceneParsingError(Exception):
@@ -38,6 +42,7 @@ class SceneParser:
                     api_key=api_key,
                 )
             except ProviderConfigError as exc:
+                logger.error("Scene parser provider not configured")
                 raise ValueError(str(exc)) from exc
 
     def parse_script(
@@ -66,17 +71,31 @@ class SceneParser:
                 voice_over, style_guide, shot_complexity
             )
 
+            logger.info(
+                "Parsing script (chars=%s, shots=%s)",
+                len(voice_over),
+                shot_complexity,
+            )
+
             response_text = self.provider.complete(prompt)
             scenes_data = self._extract_json(response_text)
 
             # Convert to Scene objects
             scenes = self._json_to_scenes(scenes_data)
 
+            logger.info(
+                "Parsed scenes=%s shots=%s",
+                len(scenes),
+                sum(scene.shot_count for scene in scenes),
+            )
+
             return scenes
 
         except RuntimeError as e:
+            logger.exception("Provider error during parsing")
             raise SceneParsingError(str(e)) from e
         except (json.JSONDecodeError, KeyError, PydanticValidationError) as e:
+            logger.exception("Failed to parse provider response")
             raise SceneParsingError(f"Failed to parse response: {str(e)}") from e
 
     def _build_parsing_prompt(
@@ -89,7 +108,7 @@ class SceneParser:
         lines = [
             (
                 "You are an expert video production assistant specializing in "
-                "Kurzgesagt-style explainer videos."
+                "stylized explainer videos."
             ),
             "",
             (
@@ -98,7 +117,10 @@ class SceneParser:
             ),
             "",
             "STYLE GUIDE:",
-            f"- Aesthetic: {style_guide.aesthetic}",
+            (
+                f"- Aesthetic: {style_guide.aesthetic.value} — "
+                f"{style_guide.aesthetic.description}"
+            ),
             f"- Color Palette: {style_guide.color_palette.value}",
             f"- Line Work: {style_guide.line_work.value}",
             f"- Motion: {style_guide.motion_pacing.value}",
@@ -130,10 +152,10 @@ class SceneParser:
             '          "description": "What this shot accomplishes visually",',
             '          "key_elements": ["element1", "element2"],',
             (
-                "          \"image_prompt\": \"Detailed Kurzgesagt-style image "
-                "prompt with composition, colors, objects, mood. Always end "
-                "with 'Flat 2D illustration, Kurzgesagt style, clean vector "
-                "shapes, soft gradients'\","  # noqa: E501
+                "          \"image_prompt\": \"Detailed image prompt aligned "
+                "with the specified aesthetic, including composition, colors, "
+                "objects, and mood. Always end with 'Flat 2D illustration, "
+                "clean vector shapes, soft gradients'\","  # noqa: E501
             ),
             (
                 "          \"video_prompt\": \"Detailed motion description: "
@@ -153,7 +175,7 @@ class SceneParser:
             "- Keep image prompts focused on composition and style",
             "- Keep video prompts focused on motion and camera work",
             "- For nested shots, describe 2-3 distinct visual beats",
-            "- Use Kurzgesagt visual language: flat, iconic, metaphorical",
+            "- Use the specified aesthetic visual language: flat, iconic, metaphorical",
         ]
         return "\n".join(lines)
 
@@ -177,7 +199,8 @@ class SceneParser:
         try:
             return cast(Dict[str, Any], json.loads(text))
         except json.JSONDecodeError:
-            cleaned = self._sanitize_json_text(text)
+            extracted = self._extract_json_text(text)
+            cleaned = self._sanitize_json_text(extracted)
             return cast(Dict[str, Any], json.loads(cleaned))
 
     @staticmethod
@@ -209,7 +232,44 @@ class SceneParser:
 
             result.append(ch)
 
-        return "".join(result)
+        cleaned = "".join(result)
+        # Remove trailing commas before object/array close
+        cleaned = cleaned.replace(",\n}", "\n}").replace(",\n]", "\n]")
+        cleaned = cleaned.replace(",}", "}").replace(",]", "]")
+        cleaned = re.sub(r",\s*([}\]])", r"\1", cleaned)
+        return cleaned
+
+    @staticmethod
+    def _extract_json_text(text: str) -> str:
+        """Extract the first valid JSON object substring using brace matching."""
+        start = text.find("{")
+        if start == -1:
+            return text
+
+        in_string = False
+        escape = False
+        depth = 0
+        for idx in range(start, len(text)):
+            ch = text[idx]
+            if escape:
+                escape = False
+                continue
+            if ch == "\\":
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start : idx + 1]
+
+        return text[start:]
 
     def _json_to_scenes(self, data: dict) -> List[Scene]:
         """Convert JSON data to Scene objects."""

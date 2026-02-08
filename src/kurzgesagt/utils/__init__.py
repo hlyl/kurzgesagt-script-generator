@@ -16,6 +16,7 @@ from .validators import (
     validate_project_name,
     validate_voice_over_script,
 )
+from .logging import configure_logging, get_logger
 
 __all__ = [
     # Validators
@@ -24,6 +25,8 @@ __all__ = [
     "validate_project_identifier",
     "validate_optional_text",
     "validate_voice_over_script",
+    "configure_logging",
+    "get_logger",
     "validate_file_path",
     "estimate_reading_time",
     # File handlers

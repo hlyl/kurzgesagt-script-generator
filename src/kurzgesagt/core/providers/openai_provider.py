@@ -7,7 +7,10 @@ from typing import Optional
 from openai import OpenAI
 
 from ...config import settings
+from ...utils import get_logger
 from .base import ProviderConfigError, SceneParsingProvider
+
+logger = get_logger("providers.openai")
 
 
 class OpenAISceneProvider(SceneParsingProvider):
@@ -24,6 +27,7 @@ class OpenAISceneProvider(SceneParsingProvider):
         self.max_tokens = settings.openai_max_tokens
 
     def complete(self, prompt: str) -> str:
+        logger.debug("OpenAI prompt: %s", prompt)
         response = self.client.chat.completions.create(
             model=self.model,
             max_tokens=self.max_tokens,
@@ -31,5 +35,7 @@ class OpenAISceneProvider(SceneParsingProvider):
         )
         message = response.choices[0].message
         if not message or not message.content:
+            logger.error("OpenAI response missing content")
             raise RuntimeError("OpenAI response did not contain message content.")
+        logger.info("OpenAI response received (chars=%s)", len(prompt))
         return message.content

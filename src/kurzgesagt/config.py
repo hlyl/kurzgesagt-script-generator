@@ -45,12 +45,19 @@ class Settings(BaseSettings):
     gemini_api_key: Optional[str] = Field(default=None, description="Gemini API key")
     gemini_image_model: str = "gemini-2.5-flash-image"
     gemini_image_size: str = "1024x1024"
+    gemini_image_model_alt: str = "gemini-3-pro-image-preview"
+    gemini_image_aspect_ratio: str = "1:1"
+    gemini_image_resolution: str = "1K"
 
     scene_parser_provider: str = "anthropic"
 
     # Streamlit
     streamlit_server_port: int = 8501
     streamlit_server_address: str = "localhost"
+
+    # Logging
+    log_level: str = "DEBUG"
+    log_file: str = "logs/app.log"
 
     @field_validator("projects_dir", "templates_dir", "exports_dir")
     @classmethod

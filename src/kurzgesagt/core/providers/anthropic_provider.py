@@ -7,7 +7,10 @@ from typing import Any, List, Optional
 from anthropic import Anthropic, APIError
 
 from ...config import settings
+from ...utils import get_logger
 from .base import ProviderConfigError, SceneParsingProvider
+
+logger = get_logger("providers.anthropic")
 
 
 class AnthropicSceneProvider(SceneParsingProvider):
@@ -25,14 +28,17 @@ class AnthropicSceneProvider(SceneParsingProvider):
 
     def complete(self, prompt: str) -> str:
         try:
+            logger.debug("Anthropic prompt: %s", prompt)
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 messages=[{"role": "user", "content": prompt}],
             )
         except APIError as exc:
+            logger.exception("Anthropic API error")
             raise RuntimeError(f"Claude API error: {exc}") from exc
 
+        logger.info("Anthropic response received (chars=%s)", len(prompt))
         return self._extract_text(response.content)
 
     @staticmethod

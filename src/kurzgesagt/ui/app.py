@@ -19,23 +19,31 @@ from kurzgesagt.core import (
     ScriptGenerator,
 )
 from kurzgesagt.core.image_generator import ImageGenerator
-from kurzgesagt.models import (
+from kurzgesagt.models import ProjectConfig
+from kurzgesagt.models.enums import (
+    Aesthetic,
     AspectRatio,
     ColorPalette,
+    ImageAspectRatio,
+    ImageResolution,
     LineWork,
     ModelType,
     MotionPacing,
-    ProjectConfig,
     ShotComplexity,
 )
 from kurzgesagt.utils import (
     ValidationError,
     estimate_reading_time,
     get_project_path,
+    get_logger,
+    configure_logging,
     validate_optional_text,
     validate_project_name,
     validate_voice_over_script,
 )
+
+configure_logging()
+logger = get_logger("ui")
 
 # Page configuration
 st.set_page_config(
@@ -98,6 +106,12 @@ def init_session_state() -> None:
 
     if "config" not in st.session_state:
         st.session_state.config = None
+
+    if "last_generated" not in st.session_state:
+        st.session_state.last_generated = None
+
+    if "last_parse" not in st.session_state:
+        st.session_state.last_parse = None
 
 
 def main() -> None:
@@ -269,23 +283,23 @@ def render_main_interface() -> None:
 
     # Tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
-        ["📋 Overview", "🎨 Style", "🎬 Script", "📄 Generate", "⚙️ Settings"]
+        ["⚙️ Settings", "📋 Overview", "🎨 Style", "🎬 Script", "📄 Generate"]
     )
 
     with tab1:
-        render_overview_tab(config)
+        render_settings_tab(config)
 
     with tab2:
-        render_style_tab(config)
+        render_overview_tab(config)
 
     with tab3:
-        render_script_tab(config)
+        render_style_tab(config)
 
     with tab4:
-        render_generate_tab(config)
+        render_script_tab(config)
 
     with tab5:
-        render_settings_tab(config)
+        render_generate_tab(config)
 
 
 def render_overview_tab(config: ProjectConfig) -> None:
@@ -322,19 +336,13 @@ def render_style_tab(config: ProjectConfig) -> None:
     with col1:
         st.subheader("Visual Language")
 
-        aesthetic_input = st.text_input(
+        config.style.aesthetic = st.selectbox(
             "Aesthetic",
-            value=config.style.aesthetic,
+            options=list(Aesthetic),
+            format_func=lambda x: x.value.replace("_", " ").title(),
+            index=list(Aesthetic).index(config.style.aesthetic),
         )
-        try:
-            config.style.aesthetic = (
-                validate_optional_text(
-                    aesthetic_input, "Aesthetic", max_length=200
-                )
-                or config.style.aesthetic
-            )
-        except ValidationError as e:
-            st.error(str(e))
+        st.caption(config.style.aesthetic.description)
 
         config.style.color_palette = st.selectbox(
             "Color Palette",
@@ -428,6 +436,19 @@ def render_script_tab(config: ProjectConfig) -> None:
             else:
                 parse_script_with_claude(config)
 
+    if config.scenes:
+        st.divider()
+        st.subheader("📌 Parsed Scenes Preview")
+        with st.expander("View scenes", expanded=False):
+            for scene in config.scenes:
+                st.markdown(
+                    f"**Scene {scene.number}:** {scene.title} (Shots: {scene.shot_count})"
+                )
+                for shot in scene.shots:
+                    st.markdown(
+                        f"- Shot {shot.number}: {shot.narration[:120]}"
+                    )
+
 
 def parse_script_with_claude(config: ProjectConfig) -> None:
     """Parse script using Claude API."""
@@ -446,6 +467,11 @@ def parse_script_with_claude(config: ProjectConfig) -> None:
             )
 
             config.scenes = scenes
+            st.session_state.config = config
+            st.session_state.last_parse = {
+                "scene_count": len(scenes),
+                "shot_count": sum(scene.shot_count for scene in scenes),
+            }
             shot_total = sum(scene.shot_count for scene in scenes)
             st.success(
                 f"✅ Generated {len(scenes)} scenes with {shot_total} shots!"
@@ -463,6 +489,10 @@ def render_generate_tab(config: ProjectConfig) -> None:
     if not config.scenes:
         st.warning("⚠️ No scenes defined. Parse your script or add scenes manually.")
         return
+
+    st.caption(
+        f"Scenes: {len(config.scenes)} • Shots: {sum(scene.shot_count for scene in config.scenes)}"
+    )
 
     col1, col2, col3 = st.columns(3)
 
@@ -493,6 +523,26 @@ def render_generate_tab(config: ProjectConfig) -> None:
     if st.button("Generate Scene Images", use_container_width=True):
         generate_scene_images(config)
 
+    if st.button("Generate First Image", use_container_width=True):
+        generate_first_image(config)
+
+    with st.expander("View image generation prompts", expanded=False):
+        prompt_lines = []
+        for scene in config.scenes:
+            for shot in scene.shots:
+                prompt_lines.append(
+                    f"Scene {scene.number} Shot {shot.number}: {shot.image_prompt}"
+                )
+        st.text_area(
+            "Image Prompts",
+            value="\n\n".join(prompt_lines) if prompt_lines else "",
+            height=300,
+            label_visibility="collapsed",
+            key="image_prompt_preview",
+        )
+
+    render_generated_preview()
+
 
 def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
     """Generate and provide download for specific document."""
@@ -513,13 +563,19 @@ def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
             content = generator.generate_script(config)
             filename = f"{st.session_state.current_project}_script.md"
 
-        status.update(label="Preparing preview...", state="running")
-        with st.expander(f"Preview {doc_type.title()}", expanded=False):
+        st.session_state.last_generated = {
+            "doc_type": doc_type,
+            "content": content,
+            "filename": filename,
+        }
+
+        with st.expander(f"Preview {doc_type.title()}", expanded=True):
             st.text_area(
                 "Preview",
                 value=content,
-                height=300,
+                height=400,
                 label_visibility="collapsed",
+                key=f"preview_{doc_type}",
             )
 
         status.update(label="Preparing download...", state="running")
@@ -559,6 +615,26 @@ def export_complete_project(config: ProjectConfig) -> None:
         st.error(f"❌ Export failed: {str(e)}")
 
 
+def render_generated_preview() -> None:
+    """Render a full-width preview of the last generated document."""
+    last = st.session_state.get("last_generated")
+    if not last:
+        return
+
+    doc_type = last.get("doc_type", "document")
+    content = last.get("content", "")
+
+    st.divider()
+    with st.expander(f"Preview {str(doc_type).title()}", expanded=False):
+        st.text_area(
+            "Preview",
+            value=content,
+            height=400,
+            label_visibility="collapsed",
+            key="preview_last_generated",
+        )
+
+
 def generate_scene_images(config: ProjectConfig) -> None:
     """Generate images for each shot and store under the project folder."""
     if not config.scenes:
@@ -594,6 +670,9 @@ def generate_scene_images(config: ProjectConfig) -> None:
                     scene_number=scene.number,
                     shot_number=shot.number,
                     prompt=shot.image_prompt,
+                    model=config.technical.image_model,
+                    aspect_ratio=config.technical.image_aspect_ratio.value,
+                    resolution=config.technical.image_resolution.value,
                 )
                 completed += 1
                 if total_shots:
@@ -601,6 +680,43 @@ def generate_scene_images(config: ProjectConfig) -> None:
 
         status.update(label="Image generation complete", state="complete")
         st.success(f"✅ Saved images to {project_dir / 'images'}")
+    except Exception as e:
+        status.update(label="Image generation failed", state="error")
+        st.error(f"❌ Image generation failed: {str(e)}")
+
+
+def generate_first_image(config: ProjectConfig) -> None:
+    """Generate only the first scene/shot image."""
+    if not config.scenes or not config.scenes[0].shots:
+        st.warning("⚠️ No scenes or shots defined. Parse your script first.")
+        return
+
+    status = st.status("Generating first image...", expanded=False)
+    try:
+        generator = ImageGenerator()
+    except Exception as e:
+        status.update(label="Image generator not configured", state="error")
+        st.error(f"❌ {str(e)}")
+        return
+
+    first_scene = config.scenes[0]
+    first_shot = first_scene.shots[0]
+    project_dir = get_project_path(
+        settings.projects_dir, st.session_state.current_project
+    )
+
+    try:
+        image_path = generator.save_shot_image(
+            project_dir=project_dir,
+            scene_number=first_scene.number,
+            shot_number=first_shot.number,
+            prompt=first_shot.image_prompt,
+            model=config.technical.image_model,
+            aspect_ratio=config.technical.image_aspect_ratio.value,
+            resolution=config.technical.image_resolution.value,
+        )
+        status.update(label="First image generated", state="complete")
+        st.success(f"✅ Saved {image_path}")
     except Exception as e:
         status.update(label="Image generation failed", state="error")
         st.error(f"❌ Image generation failed: {str(e)}")
@@ -638,6 +754,35 @@ def render_settings_tab(config: ProjectConfig) -> None:
         config.technical.text_on_screen = st.checkbox(
             "Include text overlays", value=config.technical.text_on_screen
         )
+
+    st.divider()
+    st.subheader("Image Generation")
+
+    image_models = [
+        settings.gemini_image_model,
+        settings.gemini_image_model_alt,
+    ]
+    config.technical.image_model = st.selectbox(
+        "Image Model",
+        options=image_models,
+        index=image_models.index(config.technical.image_model)
+        if config.technical.image_model in image_models
+        else 0,
+    )
+
+    config.technical.image_aspect_ratio = st.selectbox(
+        "Image Aspect Ratio",
+        options=list(ImageAspectRatio),
+        format_func=lambda x: x.value,
+        index=list(ImageAspectRatio).index(config.technical.image_aspect_ratio),
+    )
+
+    config.technical.image_resolution = st.selectbox(
+        "Image Resolution",
+        options=list(ImageResolution),
+        format_func=lambda x: x.value,
+        index=list(ImageResolution).index(config.technical.image_resolution),
+    )
 
 
 if __name__ == "__main__":

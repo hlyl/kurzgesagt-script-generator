@@ -36,6 +36,8 @@
 **🖼 Text-to-Image Prompt:**
 ```
 {{ shot.image_prompt }}
+
+Aesthetic: {{ project.style.aesthetic.value }} — {{ project.style.aesthetic.description }}
 ```
 
 **🎬 Image-to-Video Prompt:**
@@ -65,7 +67,7 @@
 ### Technical Specs
 - Aspect ratio: {{ project.technical.aspect_ratio.value }}
 - Target model: {{ project.technical.model.value }}
-- Style: {{ project.style.aesthetic }}
+- Style: {{ project.style.aesthetic.value }} — {{ project.style.aesthetic.description }}
 
 ---
 

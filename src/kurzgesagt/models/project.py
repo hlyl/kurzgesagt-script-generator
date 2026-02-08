@@ -5,11 +5,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .enums import (
+    Aesthetic,
     AspectRatio,
     ColorPalette,
+    ImageAspectRatio,
+    ImageResolution,
     LineWork,
     ModelType,
     MotionPacing,
@@ -21,14 +24,28 @@ from .scene import Scene
 class StyleGuide(BaseModel):
     """Visual style configuration."""
 
-    aesthetic: str = Field(
-        default="Kurzgesagt-inspired", description="Overall aesthetic"
+    aesthetic: Aesthetic = Field(
+        default=Aesthetic.KURZGESAGT, description="Overall aesthetic"
     )
     color_palette: ColorPalette = Field(default=ColorPalette.VIBRANT)
     line_work: LineWork = Field(default=LineWork.MINIMAL_OUTLINES)
     gradients: str = Field(default="soft", description="Gradient style")
     motion_pacing: MotionPacing = Field(default=MotionPacing.SMOOTH)
     texture: str = Field(default="flat", description="Texture style")
+
+    @field_validator("aesthetic", mode="before")
+    @classmethod
+    def coerce_aesthetic(cls, value):
+        if isinstance(value, Aesthetic):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower().replace(" ", "_")
+            if normalized == "kurzgesagt-inspired":
+                normalized = "kurzgesagt"
+            for item in Aesthetic:
+                if item.value == normalized:
+                    return item
+        return Aesthetic.KURZGESAGT
 
 
 class CharacterConfig(BaseModel):
@@ -61,6 +78,11 @@ class TechnicalSpecs(BaseModel):
         default="5-8", description="Average shot duration range"
     )
     text_on_screen: bool = Field(default=False, description="Include text overlays")
+    image_model: str = Field(default="gemini-2.5-flash-image")
+    image_aspect_ratio: ImageAspectRatio = Field(
+        default=ImageAspectRatio.RATIO_1_1
+    )
+    image_resolution: ImageResolution = Field(default=ImageResolution.K1)
 
 
 class ProjectMetadata(BaseModel):
