@@ -174,7 +174,42 @@ class SceneParser:
                     json_lines.append(line)
             text = "\n".join(json_lines)
 
-        return cast(Dict[str, Any], json.loads(text))
+        try:
+            return cast(Dict[str, Any], json.loads(text))
+        except json.JSONDecodeError:
+            cleaned = self._sanitize_json_text(text)
+            return cast(Dict[str, Any], json.loads(cleaned))
+
+    @staticmethod
+    def _sanitize_json_text(text: str) -> str:
+        """Attempt to sanitize JSON by escaping newlines inside strings."""
+        result: list[str] = []
+        in_string = False
+        escape = False
+
+        for ch in text:
+            if escape:
+                result.append(ch)
+                escape = False
+                continue
+
+            if ch == "\\":
+                result.append(ch)
+                escape = True
+                continue
+
+            if ch == '"':
+                in_string = not in_string
+                result.append(ch)
+                continue
+
+            if in_string and ch in {"\n", "\r"}:
+                result.append("\\n")
+                continue
+
+            result.append(ch)
+
+        return "".join(result)
 
     def _json_to_scenes(self, data: dict) -> List[Scene]:
         """Convert JSON data to Scene objects."""

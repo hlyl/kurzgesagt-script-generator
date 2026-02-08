@@ -18,6 +18,7 @@ from kurzgesagt.core import (
     SceneParser,
     ScriptGenerator,
 )
+from kurzgesagt.core.image_generator import ImageGenerator
 from kurzgesagt.models import (
     AspectRatio,
     ColorPalette,
@@ -30,6 +31,7 @@ from kurzgesagt.models import (
 from kurzgesagt.utils import (
     ValidationError,
     estimate_reading_time,
+    get_project_path,
     validate_optional_text,
     validate_project_name,
     validate_voice_over_script,
@@ -435,7 +437,7 @@ def parse_script_with_claude(config: ProjectConfig) -> None:
         st.error(str(e))
         return
 
-    with st.spinner("Parsing script with Claude..."):
+    with st.spinner("Parsing script with selected provider..."):
         try:
             scenes = st.session_state.scene_parser.parse_script(
                 voice_over=config.voice_over_script,
@@ -484,22 +486,43 @@ def render_generate_tab(config: ProjectConfig) -> None:
     ):
         export_complete_project(config)
 
+    st.divider()
+
+    st.subheader("🎨 Generate Scene Images")
+    st.caption("Generate one image per shot and save to the project folder.")
+    if st.button("Generate Scene Images", use_container_width=True):
+        generate_scene_images(config)
+
 
 def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
     """Generate and provide download for specific document."""
+    status = st.status("Generating document...", expanded=False)
     try:
         generator = st.session_state.script_generator
 
         if doc_type == "setup":
+            status.update(label="Generating project setup...", state="running")
             content = generator.generate_project_setup(config)
             filename = f"{st.session_state.current_project}_setup.md"
         elif doc_type == "confirmations":
+            status.update(label="Generating confirmations...", state="running")
             content = generator.generate_confirmations(config)
             filename = f"{st.session_state.current_project}_confirmations.md"
         else:  # script
+            status.update(label="Generating full script...", state="running")
             content = generator.generate_script(config)
             filename = f"{st.session_state.current_project}_script.md"
 
+        status.update(label="Preparing preview...", state="running")
+        with st.expander(f"Preview {doc_type.title()}", expanded=False):
+            st.text_area(
+                "Preview",
+                value=content,
+                height=300,
+                label_visibility="collapsed",
+            )
+
+        status.update(label="Preparing download...", state="running")
         st.download_button(
             label=f"Download {doc_type.title()}",
             data=content,
@@ -507,28 +530,80 @@ def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
             mime="text/markdown",
         )
 
-        st.success(f"✅ {doc_type.title()} generated!")
+        status.update(label=f"{doc_type.title()} generated", state="complete")
 
     except Exception as e:
+        status.update(label="Generation failed", state="error")
         st.error(f"❌ Generation failed: {str(e)}")
 
 
 def export_complete_project(config: ProjectConfig) -> None:
     """Export all project documents."""
+    status = st.status("Exporting project...", expanded=False)
     try:
         output_dir = settings.exports_dir / st.session_state.current_project
+        status.update(label="Writing files...", state="running")
 
         saved_files = st.session_state.script_generator.save_outputs(
             config=config, output_dir=output_dir
         )
 
+        status.update(label="Export complete", state="complete")
         st.success(f"✅ Exported {len(saved_files)} files to {output_dir}")
 
         for name, path in saved_files.items():
             st.write(f"- {name}: `{path}`")
 
     except Exception as e:
+        status.update(label="Export failed", state="error")
         st.error(f"❌ Export failed: {str(e)}")
+
+
+def generate_scene_images(config: ProjectConfig) -> None:
+    """Generate images for each shot and store under the project folder."""
+    if not config.scenes:
+        st.warning("⚠️ No scenes defined. Parse your script first.")
+        return
+
+    status = st.status("Generating scene images...", expanded=False)
+    try:
+        generator = ImageGenerator()
+    except Exception as e:
+        status.update(label="Image generator not configured", state="error")
+        st.error(f"❌ {str(e)}")
+        return
+
+    project_dir = get_project_path(
+        settings.projects_dir, st.session_state.current_project
+    )
+    total_shots = sum(len(scene.shots) for scene in config.scenes)
+    progress = st.progress(0.0)
+    completed = 0
+
+    try:
+        for scene in config.scenes:
+            for shot in scene.shots:
+                status.update(
+                    label=(
+                        f"Generating Scene {scene.number}, Shot {shot.number}"
+                    ),
+                    state="running",
+                )
+                generator.save_shot_image(
+                    project_dir=project_dir,
+                    scene_number=scene.number,
+                    shot_number=shot.number,
+                    prompt=shot.image_prompt,
+                )
+                completed += 1
+                if total_shots:
+                    progress.progress(completed / total_shots)
+
+        status.update(label="Image generation complete", state="complete")
+        st.success(f"✅ Saved images to {project_dir / 'images'}")
+    except Exception as e:
+        status.update(label="Image generation failed", state="error")
+        st.error(f"❌ Image generation failed: {str(e)}")
 
 
 def render_settings_tab(config: ProjectConfig) -> None:

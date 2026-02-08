@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     openai_max_tokens: int = 4000
     openai_timeout: int = 60
 
+    openai_image_model: str = "gpt-image-1"
+    openai_image_size: str = "1024x1024"
+
+    gemini_api_key: Optional[str] = Field(default=None, description="Gemini API key")
+    gemini_image_model: str = "gemini-2.5-flash-image"
+    gemini_image_size: str = "1024x1024"
+
     scene_parser_provider: str = "anthropic"
 
     # Streamlit
@@ -69,6 +76,16 @@ class Settings(BaseSettings):
         if v is None:
             return None
         if not v or v == "your_api_key_here":
+            return None
+        return v
+
+    @field_validator("gemini_api_key")
+    @classmethod
+    def validate_gemini_key(cls, v: Optional[str]) -> Optional[str]:
+        """Validate Gemini API key when provided."""
+        if v is None:
+            return None
+        if not v or v == "your_gemini_api_key_here":
             return None
         return v
 
