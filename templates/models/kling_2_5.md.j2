@@ -1,0 +1,14 @@
+{% extends "script_structure.md.j2" %}
+
+{% block video_prompt %}
+**🎬 Kling 2.5 Image-to-Video Prompt:**
+```
+Motion control: Precise and controlled.
+{{ shot.video_prompt }}
+Physics: Realistic. Element animation: Fluid and natural.
+```
+
+**💡 Kling-Specific Notes:**
+- Consider using Motion Brush for element {{ shot.key_elements[0] if shot.key_elements else 'main subject' }}
+- Static Brush recommended for background stability
+{% endblock %}

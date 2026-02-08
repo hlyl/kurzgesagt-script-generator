@@ -1,0 +1,11 @@
+{# Extends base template with Veo-specific optimizations #}
+{% extends "script_structure.md.j2" %}
+
+{% block video_prompt %}
+**🎬 Veo 3.2 Image-to-Video Prompt:**
+```
+Shot type: {{ 'Wide shot' if not shot.is_nested else 'Dynamic shot sequence' }}.
+{{ shot.video_prompt }}
+Lighting: Natural, film-quality. Camera movement: Smooth and intentional. Pacing: Measured and cinematic.
+```
+{% endblock %}

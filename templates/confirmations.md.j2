@@ -1,0 +1,45 @@
+# PRODUCTION CONFIRMATIONS
+
+**Project:** {{ project.metadata.title }}
+**Date:** {{ project.metadata.updated_at.strftime('%Y-%m-%d') }}
+
+Before proceeding to full script generation, please confirm:
+
+---
+
+## ✅ CONFIGURATION SUMMARY
+
+### 1️⃣ Characters
+- Named characters: **{{ 'Yes' if project.characters.use_named_characters else 'No' }}**
+- Avoid close-ups: **{{ 'Yes' if project.characters.avoid_closeups else 'No' }}**
+- Style: **{{ project.characters.style | replace('_', ' ') | title }}**
+
+### 2️⃣ Animation Style
+- **{{ project.style.aesthetic }}**
+- Colors: {{ project.style.color_palette.value | capitalize }}
+- Line work: {{ project.style.line_work.value | replace('_', ' ') | title }}
+- Motion: {{ project.style.motion_pacing.value | capitalize }}
+
+### 3️⃣ Technical
+- Aspect ratio: **{{ project.technical.aspect_ratio.value }}**
+- Target model: **{{ project.technical.model.value | replace('_', ' ') | title }}**
+- Shot complexity: **{{ project.technical.shot_complexity.value | title }}**
+
+### 4️⃣ Content
+- Voice-over script: **{{ 'Provided' if project.voice_over_script else 'Not provided' }}**
+- Scenes defined: **{{ project.scene_count }}**
+- Total shots: **{{ project.shot_count }}**
+- Estimated duration: **{{ project.total_duration | duration_format }}**
+
+---
+
+## 📋 CHECKLIST
+
+- [ ] All settings reviewed and confirmed
+- [ ] Voice-over script is finalized
+- [ ] Environments and locations defined
+- [ ] Ready to generate production script
+
+---
+
+**Next Step:** Generate full production script with scene breakdowns and shot-by-shot prompts.

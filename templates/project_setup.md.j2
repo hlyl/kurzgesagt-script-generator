@@ -1,0 +1,66 @@
+# PROJECT: {{ project.metadata.title }}
+
+**Created:** {{ project.metadata.created_at.strftime('%Y-%m-%d') }}
+**Author:** {{ project.metadata.author or 'Unknown' }}
+**Version:** {{ project.metadata.version }}
+
+---
+
+## STYLE GUIDE
+
+### Visual Language
+- **Core Aesthetic**: {{ project.style.aesthetic }}
+- **Color Palette**: {{ project.style.color_palette.value | capitalize }}
+- **Line Work**: {{ project.style.line_work.value | replace('_', ' ') | title }}
+- **Gradients**: {{ project.style.gradients | capitalize }}
+- **Texture**: {{ project.style.texture | capitalize }}
+
+### Motion Philosophy
+- **Pacing**: {{ project.style.motion_pacing.value | capitalize }}
+- **Transitions**: Smooth morphs and clean cuts
+- **Camera Movement**: Gentle pans and intentional motion
+- **Object Behavior**: Floaty, physics-based
+
+---
+
+## ENVIRONMENT LIBRARY
+
+{% if project.environments %}
+### Primary Locations
+{% for env in project.environments %}
+{{ loop.index }}. **{{ env.name }}**: {{ env.description or 'No description' }}
+   - Mood: {{ env.mood }}
+   {% if env.props %}
+   - Props: {{ env.props | join(', ') }}
+   {% endif %}
+{% endfor %}
+{% else %}
+*No environments defined yet*
+{% endif %}
+
+---
+
+## CHARACTER/ICON SYSTEM
+
+### Human Figures
+- **Named Characters**: {{ 'Yes' if project.characters.use_named_characters else 'No' }}
+- **Detail Level**: {{ project.characters.detail_level | replace('_', ' ') | title }}
+- **Style**: {{ project.characters.style | replace('_', ' ') | title }}
+- **Close-ups**: {{ 'Avoided' if project.characters.avoid_closeups else 'Allowed' }}
+
+---
+
+## TECHNICAL SPECIFICATIONS
+
+- **Aspect Ratio**: {{ project.technical.aspect_ratio.value }}
+- **Target Model**: {{ project.technical.model.value | replace('_', ' ') | title }}
+- **Shot Complexity**: {{ project.technical.shot_complexity.value | title }}
+- **Avg Shot Duration**: {{ project.technical.avg_shot_duration }} seconds
+- **Text on Screen**: {{ 'Yes' if project.technical.text_on_screen else 'No' }}
+
+---
+
+## VOICE-OVER SCRIPT
+```
+{{ project.voice_over_script or '*No script provided yet*' }}
+```
