@@ -43,8 +43,12 @@ class ImageGenerator:
         model: Optional[str] = None,
         aspect_ratio: Optional[str] = None,
         resolution: Optional[str] = None,
+        style_context: Optional[str] = None,
     ) -> bytes:
         """Generate an image from a prompt and return bytes."""
+        if style_context:
+            prompt = f"{prompt}\n\nStyle guide: {style_context}"
+        logger.debug("Image generation prompt: %s", prompt)
         model_name = model or self.model
         aspect = aspect_ratio or settings.gemini_image_aspect_ratio
         image_size = resolution or settings.gemini_image_resolution
@@ -101,6 +105,7 @@ class ImageGenerator:
         model: Optional[str] = None,
         aspect_ratio: Optional[str] = None,
         resolution: Optional[str] = None,
+        style_context: Optional[str] = None,
     ) -> Path:
         """Generate and save a shot image under the project directory."""
         image_bytes = self.generate_image_bytes(
@@ -108,6 +113,7 @@ class ImageGenerator:
             model=model,
             aspect_ratio=aspect_ratio,
             resolution=resolution,
+            style_context=style_context,
         )
         scene_dir = project_dir / "images" / f"scene_{scene_number:02d}"
         ensure_directory(scene_dir)

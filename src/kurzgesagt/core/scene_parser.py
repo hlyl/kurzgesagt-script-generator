@@ -70,6 +70,7 @@ class SceneParser:
             prompt = self._build_parsing_prompt(
                 voice_over, style_guide, shot_complexity
             )
+            logger.debug("Scene parser prompt: %s", prompt)
 
             logger.info(
                 "Parsing script (chars=%s, shots=%s)",
@@ -155,7 +156,7 @@ class SceneParser:
                 "          \"image_prompt\": \"Detailed image prompt aligned "
                 "with the specified aesthetic, including composition, colors, "
                 "objects, and mood. Always end with 'Flat 2D illustration, "
-                "clean vector shapes, soft gradients'\","  # noqa: E501
+                "clean vector shapes, soft gradients, no text or lettering'\","  # noqa: E501
             ),
             (
                 "          \"video_prompt\": \"Detailed motion description: "
@@ -173,6 +174,7 @@ class SceneParser:
             "IMPORTANT:",
             "- Match narration timing to shot durations",
             "- Keep image prompts focused on composition and style",
+            "- Do not include any text or lettering in the images",
             "- Keep video prompts focused on motion and camera work",
             "- For nested shots, describe 2-3 distinct visual beats",
             "- Use the specified aesthetic visual language: flat, iconic, metaphorical",

@@ -673,6 +673,7 @@ def generate_scene_images(config: ProjectConfig) -> None:
                     model=config.technical.image_model,
                     aspect_ratio=config.technical.image_aspect_ratio.value,
                     resolution=config.technical.image_resolution.value,
+                    style_context=config.style.aesthetic.description,
                 )
                 completed += 1
                 if total_shots:
@@ -714,6 +715,7 @@ def generate_first_image(config: ProjectConfig) -> None:
             model=config.technical.image_model,
             aspect_ratio=config.technical.image_aspect_ratio.value,
             resolution=config.technical.image_resolution.value,
+            style_context=config.style.aesthetic.description,
         )
         status.update(label="First image generated", state="complete")
         st.success(f"✅ Saved {image_path}")

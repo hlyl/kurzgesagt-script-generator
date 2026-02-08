@@ -59,3 +59,34 @@ def test_save_shot_image(monkeypatch, temp_dir):
 
     assert image_path.exists()
     assert image_path.read_bytes() == b"image-bytes"
+
+
+def test_generate_image_bytes_includes_style_context(monkeypatch):
+    captured = {}
+
+    class _CapturingModels:
+        def generate_content(self, **kwargs):
+            captured["contents"] = kwargs.get("contents")
+            return SimpleNamespace(parts=[_MockPart()])
+
+    class _CapturingClient:
+        def __init__(self, api_key: str):
+            self.api_key = api_key
+            self.models = _CapturingModels()
+
+    monkeypatch.setattr(
+        "src.kurzgesagt.core.image_generator.genai.Client",
+        _CapturingClient,
+    )
+    monkeypatch.setattr(settings, "gemini_api_key", "test-key")
+
+    generator = ImageGenerator()
+    generator.generate_image_bytes(
+        "base prompt",
+        style_context="Layered scene, parallax-ready. No text.",
+    )
+
+    assert captured["contents"][0] == (
+        "base prompt\n\n"
+        "Style guide: Layered scene, parallax-ready. No text."
+    )

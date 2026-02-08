@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "Kurzgesagt Script Generator"
     app_version: str = "0.1.0"
-    debug: bool = False
+    debug: bool = True
 
     # API Keys
     anthropic_api_key: Optional[str] = Field(

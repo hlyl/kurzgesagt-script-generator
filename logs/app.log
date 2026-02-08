@@ -72,3 +72,7 @@ json.decoder.JSONDecodeError: Unterminated string starting at: line 297 column 2
 2026-02-08 12:49:18,521 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=5645)
 2026-02-08 12:49:18,521 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=11
 2026-02-08 12:49:48,789 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 12:58:51,303 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 12:59:13,502 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6159)
+2026-02-08 12:59:13,502 | INFO | kurzgesagt.scene_parser | Parsed scenes=2 shots=15
+2026-02-08 13:08:07,109 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K

@@ -301,4 +301,7 @@ class Aesthetic(Enum):
 
     def __init__(self, value: str, description: str) -> None:
         self._value_ = value
-        self.description = description
+        normalized = description.rstrip()
+        if "no text" not in normalized.lower():
+            normalized = f"{normalized} No text or lettering in the image."
+        self.description = normalized
