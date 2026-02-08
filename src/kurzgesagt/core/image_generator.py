@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -49,6 +50,9 @@ class ImageGenerator:
         if style_context:
             prompt = f"{prompt}\n\nStyle guide: {style_context}"
         logger.debug("Image generation prompt: %s", prompt)
+        logger.info("Image generation prompt:\n%s", prompt)
+        sys.stdout.write(f"[Image prompt]\n{prompt}\n\n")
+        sys.stdout.flush()
         model_name = model or self.model
         aspect = aspect_ratio or settings.gemini_image_aspect_ratio
         image_size = resolution or settings.gemini_image_resolution

@@ -20,6 +20,24 @@ def configure_logging(
 
     logger = logging.getLogger("kurzgesagt")
     if logger.handlers:
+        has_file_handler = any(
+            isinstance(handler, RotatingFileHandler)
+            for handler in logger.handlers
+        )
+        if not has_file_handler:
+            log_path = Path(log_file) if log_file else Path(settings.log_file)
+            if log_path:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                file_handler = RotatingFileHandler(
+                    log_path, maxBytes=1_000_000, backupCount=3
+                )
+                file_handler.setLevel(level)
+                file_handler.setFormatter(
+                    logging.Formatter(
+                        "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+                    )
+                )
+                logger.addHandler(file_handler)
         return logger
 
     logger.setLevel(level)

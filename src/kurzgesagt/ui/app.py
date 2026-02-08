@@ -282,8 +282,15 @@ def render_main_interface() -> None:
     config = st.session_state.config
 
     # Tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
-        ["⚙️ Settings", "📋 Overview", "🎨 Style", "🎬 Script", "📄 Generate"]
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+        [
+            "⚙️ Settings",
+            "📋 Overview",
+            "🎨 Style",
+            "🎬 Script",
+            "📄 Generate",
+            "🖼 Images",
+        ]
     )
 
     with tab1:
@@ -300,6 +307,9 @@ def render_main_interface() -> None:
 
     with tab5:
         render_generate_tab(config)
+
+    with tab6:
+        render_images_tab(config)
 
 
 def render_overview_tab(config: ProjectConfig) -> None:
@@ -544,6 +554,89 @@ def render_generate_tab(config: ProjectConfig) -> None:
     render_generated_preview()
 
 
+def render_images_tab(config: ProjectConfig) -> None:
+    """Render image generation interface with script upload."""
+    st.header("Image Generation")
+    st.caption(
+        "Upload or paste the script content used to derive scene image prompts."
+    )
+
+    uploaded = st.file_uploader(
+        "Upload script file",
+        type=["txt", "md"],
+        help="Upload the full script or voice-over text.",
+    )
+
+    if uploaded is not None:
+        try:
+            file_text = uploaded.read().decode("utf-8", errors="ignore")
+            st.session_state.image_source_text = file_text
+        except Exception as exc:
+            st.error(f"❌ Failed to read upload: {exc}")
+
+    source_text = st.text_area(
+        "Script for image generation",
+        value=st.session_state.get("image_source_text", ""),
+        height=220,
+        key="image_source_text_area",
+    )
+    st.session_state.image_source_text = source_text
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Parse Script Into Scenes", use_container_width=True):
+            if not source_text.strip():
+                st.warning("⚠️ Please provide script content first.")
+            elif not st.session_state.scene_parser:
+                st.error("❌ Scene parser not configured.")
+            else:
+                try:
+                    scenes = st.session_state.scene_parser.parse_script(
+                        voice_over=source_text,
+                        style_guide=config.style,
+                        shot_complexity=config.technical.shot_complexity.value,
+                    )
+                    config.scenes = scenes
+                    config.voice_over_script = source_text
+                    st.session_state.config = config
+                    st.success(
+                        f"✅ Parsed {len(scenes)} scenes with {sum(scene.shot_count for scene in scenes)} shots."
+                    )
+                except Exception as exc:
+                    st.error(f"❌ Parsing failed: {exc}")
+
+    with col2:
+        if st.button("Clear Script", use_container_width=True):
+            st.session_state.image_source_text = ""
+            st.rerun()
+
+    st.divider()
+
+    st.subheader("Generate Images")
+    st.caption("Generate one image per shot and save to the project folder.")
+
+    if st.button("Generate Scene Images", use_container_width=True):
+        generate_scene_images(config)
+
+    if st.button("Generate First Image", use_container_width=True):
+        generate_first_image(config)
+
+    with st.expander("View image generation prompts", expanded=False):
+        prompt_lines = []
+        for scene in config.scenes:
+            for shot in scene.shots:
+                prompt_lines.append(
+                    f"Scene {scene.number} Shot {shot.number}: {shot.image_prompt}"
+                )
+        st.text_area(
+            "Image Prompts",
+            value="\n\n".join(prompt_lines) if prompt_lines else "",
+            height=300,
+            label_visibility="collapsed",
+            key="image_prompt_preview_images_tab",
+        )
+
+
 def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
     """Generate and provide download for specific document."""
     status = st.status("Generating document...", expanded=False)
@@ -569,14 +662,22 @@ def generate_and_download(config: ProjectConfig, doc_type: str) -> None:
             "filename": filename,
         }
 
+        preview_key = f"preview_{doc_type}"
+        if preview_key not in st.session_state:
+            st.session_state[preview_key] = content
+
         with st.expander(f"Preview {doc_type.title()}", expanded=True):
-            st.text_area(
+            edited_content = st.text_area(
                 "Preview",
-                value=content,
+                value=st.session_state[preview_key],
                 height=400,
                 label_visibility="collapsed",
-                key=f"preview_{doc_type}",
+                key=preview_key,
             )
+
+        if edited_content != content:
+            content = edited_content
+            st.session_state.last_generated["content"] = edited_content
 
         status.update(label="Preparing download...", state="running")
         st.download_button(
@@ -625,14 +726,21 @@ def render_generated_preview() -> None:
     content = last.get("content", "")
 
     st.divider()
+    preview_key = "preview_last_generated"
+    if preview_key not in st.session_state:
+        st.session_state[preview_key] = content
+
     with st.expander(f"Preview {str(doc_type).title()}", expanded=False):
-        st.text_area(
+        edited_content = st.text_area(
             "Preview",
-            value=content,
+            value=st.session_state[preview_key],
             height=400,
             label_visibility="collapsed",
-            key="preview_last_generated",
+            key=preview_key,
         )
+
+    if edited_content != content:
+        st.session_state.last_generated["content"] = edited_content
 
 
 def generate_scene_images(config: ProjectConfig) -> None:

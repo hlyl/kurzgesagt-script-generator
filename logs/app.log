@@ -79,3 +79,16 @@ json.decoder.JSONDecodeError: Unterminated string starting at: line 297 column 2
 2026-02-08 13:56:28,493 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
 2026-02-08 13:56:40,654 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
 2026-02-08 13:56:40,654 | INFO | kurzgesagt.scene_parser | Parsed scenes=2 shots=6
+2026-02-08 13:58:58,153 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 14:00:51,272 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 14:01:35,648 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 14:14:52,989 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-08 14:15:15,405 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6261)
+2026-02-08 14:15:15,405 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=12
+2026-02-08 14:15:34,844 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 14:19:29,692 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 14:22:50,523 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A minimalist illustration featuring a bike on a simple porch with clean outlines. In the background, a stylized bank vault with pastel colors and geometric shapes. The composition should include clear negative space. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 14:22:50,523 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
