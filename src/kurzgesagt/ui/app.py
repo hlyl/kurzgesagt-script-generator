@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Optional
 
 import streamlit as st
 
@@ -37,6 +38,7 @@ from kurzgesagt.utils import (
     get_project_path,
     get_logger,
     configure_logging,
+    ensure_directory,
     validate_optional_text,
     validate_project_name,
     validate_voice_over_script,
@@ -539,6 +541,49 @@ def render_images_tab(config: ProjectConfig) -> None:
         "Upload or paste the script content used to derive scene image prompts."
     )
 
+    st.subheader("Style Reference Image")
+    st.caption(
+        "Optional: Upload a reference image to guide the visual style of generated images."
+    )
+    reference_upload = st.file_uploader(
+        "Upload style reference image",
+        type=["png", "jpg", "jpeg", "webp"],
+        help="The reference image is stored in the project assets folder.",
+        key="style_reference_upload",
+    )
+
+    if reference_upload is not None:
+        try:
+            project_dir = get_project_path(
+                settings.projects_dir, st.session_state.current_project
+            )
+            assets_dir = ensure_directory(project_dir / "assets")
+            suffix = Path(reference_upload.name).suffix.lower() or ".png"
+            reference_path = assets_dir / f"style_reference{suffix}"
+            reference_path.write_bytes(reference_upload.read())
+            config.style.reference_image_path = str(
+                Path("assets") / reference_path.name
+            )
+            st.session_state.config = config
+            st.success(f"✅ Saved reference image to {reference_path}")
+        except Exception as exc:
+            st.error(f"❌ Failed to save reference image: {exc}")
+
+    if config.style.reference_image_path:
+        st.write(
+            f"Current reference: {config.style.reference_image_path}"
+        )
+        if st.button(
+            "Clear Reference Image",
+            use_container_width=True,
+            key="style_reference_clear",
+        ):
+            config.style.reference_image_path = None
+            st.session_state.config = config
+            st.rerun()
+
+    st.divider()
+
     uploaded = st.file_uploader(
         "Upload script file",
         type=["txt", "md"],
@@ -612,6 +657,42 @@ def render_images_tab(config: ProjectConfig) -> None:
         key="images_generate_first",
     ):
         generate_first_image(config)
+
+    selectable_shots = []
+    for scene in config.scenes:
+        for shot in scene.shots:
+            description = shot.description or shot.narration
+            description = (description or "").strip()
+            if len(description) > 60:
+                description = f"{description[:57]}..."
+            label = (
+                f"Scene {scene.number} — {scene.title} | Shot {shot.number}: "
+                f"{description}"
+            )
+            selectable_shots.append((label, scene.number, shot.number))
+
+    selected_label = st.selectbox(
+        "Generate image for",
+        options=[item[0] for item in selectable_shots] or ["No shots available"],
+        help="Select a shot to generate its image.",
+        key="image_generate_select",
+        disabled=not selectable_shots,
+    )
+    if st.button(
+        "Generate Selected Image",
+        use_container_width=True,
+        key="images_generate_selected",
+        disabled=not selectable_shots,
+    ):
+        selected_index = next(
+            (
+                idx + 1
+                for idx, item in enumerate(selectable_shots)
+                if item[0] == selected_label
+            ),
+            1,
+        )
+        generate_selected_image(config, int(selected_index))
 
     with st.expander("View image generation prompts", expanded=False):
         prompt_lines = []
@@ -733,6 +814,31 @@ def render_generated_preview() -> None:
         st.session_state.last_generated["content"] = edited_content
 
 
+def _load_reference_image_payload(
+    config: ProjectConfig, project_dir: Path
+) -> tuple[Optional[bytes], Optional[str]]:
+    """Load reference image bytes and mime type if configured."""
+    reference_path = config.style.reference_image_path
+    if not reference_path:
+        return None, None
+
+    image_path = Path(reference_path)
+    if not image_path.is_absolute():
+        image_path = project_dir / image_path
+
+    if not image_path.exists():
+        return None, None
+
+    suffix = image_path.suffix.lower()
+    mime = "image/png"
+    if suffix in {".jpg", ".jpeg"}:
+        mime = "image/jpeg"
+    elif suffix == ".webp":
+        mime = "image/webp"
+
+    return image_path.read_bytes(), mime
+
+
 def generate_scene_images(config: ProjectConfig) -> None:
     """Generate images for each shot and store under the project folder."""
     if not config.scenes:
@@ -750,6 +856,7 @@ def generate_scene_images(config: ProjectConfig) -> None:
     project_dir = get_project_path(
         settings.projects_dir, st.session_state.current_project
     )
+    reference_payload = _load_reference_image_payload(config, project_dir)
     total_shots = sum(len(scene.shots) for scene in config.scenes)
     progress = st.progress(0.0)
     completed = 0
@@ -772,6 +879,8 @@ def generate_scene_images(config: ProjectConfig) -> None:
                     aspect_ratio=config.technical.image_aspect_ratio.value,
                     resolution=config.technical.image_resolution.value,
                     style_context=config.style.aesthetic.description,
+                    reference_image_bytes=reference_payload[0],
+                    reference_image_mime=reference_payload[1],
                 )
                 completed += 1
                 if total_shots:
@@ -803,6 +912,7 @@ def generate_first_image(config: ProjectConfig) -> None:
     project_dir = get_project_path(
         settings.projects_dir, st.session_state.current_project
     )
+    reference_payload = _load_reference_image_payload(config, project_dir)
 
     try:
         image_path = generator.save_shot_image(
@@ -814,9 +924,81 @@ def generate_first_image(config: ProjectConfig) -> None:
             aspect_ratio=config.technical.image_aspect_ratio.value,
             resolution=config.technical.image_resolution.value,
             style_context=config.style.aesthetic.description,
+            reference_image_bytes=reference_payload[0],
+            reference_image_mime=reference_payload[1],
         )
         status.update(label="First image generated", state="complete")
         st.success(f"✅ Saved {image_path}")
+    except Exception as e:
+        status.update(label="Image generation failed", state="error")
+        st.error(f"❌ Image generation failed: {str(e)}")
+
+
+def generate_selected_image(config: ProjectConfig, index: int) -> None:
+    """Generate a specific image by index across all shots."""
+    if not config.scenes:
+        st.warning("⚠️ No scenes defined. Parse your script first.")
+        return
+
+    shots = [shot for scene in config.scenes for shot in scene.shots]
+    if not shots:
+        st.warning("⚠️ No shots defined. Parse your script first.")
+        return
+
+    total = len(shots)
+    if index < 1 or index > total:
+        st.warning(f"⚠️ Select a value between 1 and {total}.")
+        return
+
+    status = st.status("Generating selected image...", expanded=False)
+    try:
+        generator = ImageGenerator()
+    except Exception as e:
+        status.update(label="Image generator not configured", state="error")
+        st.error(f"❌ {str(e)}")
+        return
+
+    project_dir = get_project_path(
+        settings.projects_dir, st.session_state.current_project
+    )
+    reference_payload = _load_reference_image_payload(config, project_dir)
+
+    try:
+        scene_index = 0
+        running = 0
+        selected_scene = None
+        selected_shot = None
+        for scene in config.scenes:
+            for shot in scene.shots:
+                running += 1
+                if running == index:
+                    selected_scene = scene
+                    selected_shot = shot
+                    break
+            if selected_shot is not None:
+                break
+
+        if not selected_scene or not selected_shot:
+            status.update(label="Image generation failed", state="error")
+            st.error("❌ Unable to resolve selected shot.")
+            return
+
+        image_path = generator.save_shot_image(
+            project_dir=project_dir,
+            scene_number=selected_scene.number,
+            shot_number=selected_shot.number,
+            prompt=selected_shot.image_prompt,
+            model=config.technical.image_model,
+            aspect_ratio=config.technical.image_aspect_ratio.value,
+            resolution=config.technical.image_resolution.value,
+            style_context=config.style.aesthetic.description,
+            reference_image_bytes=reference_payload[0],
+            reference_image_mime=reference_payload[1],
+        )
+        status.update(label="Selected image generated", state="complete")
+        st.success(
+            f"✅ Saved {image_path} (Scene {selected_scene.number}, Shot {selected_shot.number})"
+        )
     except Exception as e:
         status.update(label="Image generation failed", state="error")
         st.error(f"❌ Image generation failed: {str(e)}")

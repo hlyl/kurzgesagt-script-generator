@@ -209,3 +209,51 @@ Wide shot. A minimalist flat illustration showing a bike on a porch in the foreg
 
 Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
 2026-02-08 19:03:37,952 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:13:53,584 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=simple)
+2026-02-08 22:14:18,397 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6269)
+2026-02-08 22:14:18,397 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=12
+2026-02-08 22:15:09,777 | INFO | kurzgesagt.scene_parser | Parsing script (chars=22168, shots=simple)
+2026-02-08 22:15:38,925 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=24505)
+2026-02-08 22:15:38,925 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=14
+2026-02-08 22:15:45,394 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A minimalist flat illustration showing a bike on a porch in the foreground and a distant bank vault in the background. Use pastel colors with clean outlines and clear negative space around elements. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 22:15:45,394 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:15:45,394 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)
+2026-02-08 22:17:26,249 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A minimalist flat illustration showing a bike on a porch in the foreground and a distant bank vault in the background. Use pastel colors with clean outlines and clear negative space around elements. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 22:17:26,249 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:17:26,249 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)
+2026-02-08 22:18:43,549 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=simple)
+2026-02-08 22:19:05,679 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6266)
+2026-02-08 22:19:05,679 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=12
+2026-02-08 22:20:28,581 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration depicting a bike resting casually on a porch on the left and a sturdy bank vault closed on the right, emphasizing contrasting security levels. Clean vector shapes, warm colors, minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 22:20:28,582 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:20:28,582 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)
+2026-02-08 22:28:03,587 | INFO | kurzgesagt.scene_parser | Parsing script (chars=22168, shots=simple)
+2026-02-08 22:28:29,688 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=24504)
+2026-02-08 22:28:29,688 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=14
+2026-02-08 22:28:43,473 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A minimalist flat illustration showing a bike on a porch in the foreground and a distant bank vault in the background. Use pastel colors with clean outlines and clear negative space around elements. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 22:28:43,473 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:28:43,473 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)
+2026-02-08 22:31:04,772 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A flat, simple illustration of a house viewed from the front with a locked door. Utilize pastel colors, clean outlines, and designated negative space. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 22:31:04,772 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:31:04,772 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)
+2026-02-08 22:35:05,938 | INFO | kurzgesagt.image_generator | Image generation prompt:
+Wide shot. A flat illustration of a bank vault, securely closed, with a strong visual presence. Implement a pastel palette and clear outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-08 22:35:05,938 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-08 22:35:05,938 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)

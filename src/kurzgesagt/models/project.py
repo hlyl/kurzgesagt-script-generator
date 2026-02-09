@@ -32,6 +32,10 @@ class StyleGuide(BaseModel):
     gradients: str = Field(default="soft", description="Gradient style")
     motion_pacing: MotionPacing = Field(default=MotionPacing.SMOOTH)
     texture: str = Field(default="flat", description="Texture style")
+    reference_image_path: Optional[str] = Field(
+        default=None,
+        description="Project-relative path to style reference image",
+    )
 
     @field_validator("aesthetic", mode="before")
     @classmethod

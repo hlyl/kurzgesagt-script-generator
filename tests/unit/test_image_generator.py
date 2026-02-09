@@ -90,3 +90,56 @@ def test_generate_image_bytes_includes_style_context(monkeypatch):
         "base prompt\n\n"
         "Style guide: Layered scene, parallax-ready. No text."
     )
+
+
+def test_generate_image_bytes_with_reference_image(monkeypatch):
+    captured = {}
+
+    class _CapturingModels:
+        def generate_content(self, **kwargs):
+            captured["contents"] = kwargs.get("contents")
+            return SimpleNamespace(parts=[_MockPart()])
+
+    class _CapturingClient:
+        def __init__(self, api_key: str):
+            self.api_key = api_key
+            self.models = _CapturingModels()
+
+    class _PartStub:
+        @staticmethod
+        def from_bytes(data, mime_type):
+            return {"kind": "bytes", "data": data, "mime": mime_type}
+
+        @staticmethod
+        def from_text(text):
+            return {"kind": "text", "text": text}
+
+    class _ContentStub:
+        def __init__(self, parts):
+            self.parts = parts
+
+    monkeypatch.setattr(
+        "src.kurzgesagt.core.image_generator.genai.Client",
+        _CapturingClient,
+    )
+    monkeypatch.setattr(settings, "gemini_api_key", "test-key")
+    monkeypatch.setattr(
+        "src.kurzgesagt.core.image_generator.types.Part",
+        _PartStub,
+    )
+    monkeypatch.setattr(
+        "src.kurzgesagt.core.image_generator.types.Content",
+        _ContentStub,
+    )
+
+    generator = ImageGenerator()
+    generator.generate_image_bytes(
+        "prompt",
+        reference_image_bytes=b"ref-bytes",
+        reference_image_mime="image/png",
+    )
+
+    contents = captured["contents"]
+    assert isinstance(contents[0], _ContentStub)
+    assert contents[0].parts[0]["kind"] == "bytes"
+    assert contents[0].parts[1]["kind"] == "text"

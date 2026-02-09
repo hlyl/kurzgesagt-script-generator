@@ -45,6 +45,8 @@ class ImageGenerator:
         aspect_ratio: Optional[str] = None,
         resolution: Optional[str] = None,
         style_context: Optional[str] = None,
+        reference_image_bytes: Optional[bytes] = None,
+        reference_image_mime: str = "image/png",
     ) -> bytes:
         """Generate an image from a prompt and return bytes."""
         if style_context:
@@ -62,9 +64,27 @@ class ImageGenerator:
             aspect,
             image_size,
         )
+        if reference_image_bytes:
+            logger.info(
+                "Using reference image for style transfer (bytes=%s)",
+                len(reference_image_bytes),
+            )
+            contents = [
+                types.Content(
+                    parts=[
+                        types.Part.from_bytes(
+                            data=reference_image_bytes,
+                            mime_type=reference_image_mime,
+                        ),
+                        types.Part.from_text(text=prompt),
+                    ]
+                )
+            ]
+        else:
+            contents = [prompt]
         response = self.client.models.generate_content(
             model=model_name,
-            contents=[prompt],
+            contents=contents,
             config=types.GenerateContentConfig(
                 response_modalities=["TEXT", "IMAGE"],
                 image_config=types.ImageConfig(
@@ -110,6 +130,8 @@ class ImageGenerator:
         aspect_ratio: Optional[str] = None,
         resolution: Optional[str] = None,
         style_context: Optional[str] = None,
+        reference_image_bytes: Optional[bytes] = None,
+        reference_image_mime: str = "image/png",
     ) -> Path:
         """Generate and save a shot image under the project directory."""
         image_bytes = self.generate_image_bytes(
@@ -118,6 +140,8 @@ class ImageGenerator:
             aspect_ratio=aspect_ratio,
             resolution=resolution,
             style_context=style_context,
+            reference_image_bytes=reference_image_bytes,
+            reference_image_mime=reference_image_mime,
         )
         scene_dir = project_dir / "images" / f"scene_{scene_number:02d}"
         ensure_directory(scene_dir)
