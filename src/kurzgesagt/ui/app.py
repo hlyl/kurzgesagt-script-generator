@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import streamlit as st
 
@@ -20,6 +20,7 @@ from kurzgesagt.core import (
     ResolveExporter,
     SceneParser,
     ScriptGenerator,
+    VideoGenerator,
 )
 from kurzgesagt.core.image_generator import ImageGenerator
 from kurzgesagt.models import ProjectConfig
@@ -1522,8 +1523,22 @@ def generate_full_audio(
                     # Load as AudioSegment
                     audio_segment = AudioSegment.from_mp3(BytesIO(audio_bytes))
                     shot_duration_ms = len(audio_segment)
+                    shot_duration_seconds = shot_duration_ms / 1000.0
                     combined_audio += audio_segment
                     current_time_ms += shot_duration_ms
+
+                    # Update project config with actual audio duration
+                    try:
+                        pm = st.session_state.project_manager
+                        pm.update_shot_duration(
+                            project_name=st.session_state.current_project,
+                            scene_number=scene_info['number'],
+                            shot_number=shot_idx + 1,
+                            actual_duration=shot_duration_seconds,
+                        )
+                    except Exception as e:
+                        # Log warning but continue processing
+                        st.warning(f"⚠️ Could not update duration for Scene {scene_info['number']}, Shot {shot_idx + 1}: {str(e)}")
 
                     # Record shot timing
                     scene_shots.append({
@@ -1650,7 +1665,7 @@ def generate_audio_by_scene(
             scene_narration = " ".join(scene_info['shot_texts'])
 
             if scene_narration.strip():
-                generator.generate_scene_audio(
+                audio_path, actual_duration = generator.generate_scene_audio(
                     project_dir=project_dir,
                     scene_number=scene_info['number'],
                     narration=scene_narration,
@@ -1658,6 +1673,17 @@ def generate_audio_by_scene(
                     voice=voice,
                     speed=speed,
                 )
+
+                # Update project config with actual audio duration
+                try:
+                    pm = st.session_state.project_manager
+                    pm.update_scene_duration(
+                        project_name=st.session_state.current_project,
+                        scene_number=scene_info['number'],
+                        actual_duration=actual_duration,
+                    )
+                except Exception as e:
+                    st.warning(f"⚠️ Could not update duration for Scene {scene_info['number']}: {str(e)}")
 
             progress.progress((scene_idx + 1) / total_scenes)
 
@@ -1706,7 +1732,7 @@ def generate_audio_by_shot(
                         state="running",
                     )
 
-                    generator.generate_shot_audio(
+                    audio_path, actual_duration = generator.generate_shot_audio(
                         project_dir=project_dir,
                         scene_number=scene_info['number'],
                         shot_number=shot_idx,
@@ -1715,6 +1741,18 @@ def generate_audio_by_shot(
                         voice=voice,
                         speed=speed,
                     )
+
+                    # Update project config with actual audio duration
+                    try:
+                        pm = st.session_state.project_manager
+                        pm.update_shot_duration(
+                            project_name=st.session_state.current_project,
+                            scene_number=scene_info['number'],
+                            shot_number=shot_idx,
+                            actual_duration=actual_duration,
+                        )
+                    except Exception as e:
+                        st.warning(f"⚠️ Could not update duration for Scene {scene_info['number']}, Shot {shot_idx}: {str(e)}")
 
                 completed += 1
                 progress.progress(completed / total_shots)
@@ -1747,7 +1785,7 @@ def generate_selected_audio(
 
         if item_type == "scene":
             status.update(label=f"Generating Scene {scene_num}...", state="running")
-            audio_path = generator.generate_scene_audio(
+            audio_path, actual_duration = generator.generate_scene_audio(
                 project_dir=project_dir,
                 scene_number=scene_num,
                 narration=narration_text,
@@ -1755,12 +1793,24 @@ def generate_selected_audio(
                 voice=voice,
                 speed=speed,
             )
+
+            # Update project config with actual duration
+            try:
+                pm = st.session_state.project_manager
+                pm.update_scene_duration(
+                    project_name=st.session_state.current_project,
+                    scene_number=scene_num,
+                    actual_duration=actual_duration,
+                )
+            except Exception as e:
+                st.warning(f"⚠️ Could not update duration for Scene {scene_num}: {str(e)}")
+
         else:  # shot
             status.update(
                 label=f"Generating Scene {scene_num}, Shot {shot_num}...",
                 state="running",
             )
-            audio_path = generator.generate_shot_audio(
+            audio_path, actual_duration = generator.generate_shot_audio(
                 project_dir=project_dir,
                 scene_number=scene_num,
                 shot_number=shot_num,
@@ -1770,8 +1820,20 @@ def generate_selected_audio(
                 speed=speed,
             )
 
+            # Update project config with actual duration
+            try:
+                pm = st.session_state.project_manager
+                pm.update_shot_duration(
+                    project_name=st.session_state.current_project,
+                    scene_number=scene_num,
+                    shot_number=shot_num,
+                    actual_duration=actual_duration,
+                )
+            except Exception as e:
+                st.warning(f"⚠️ Could not update duration for Scene {scene_num}, Shot {shot_num}: {str(e)}")
+
         status.update(label="Audio generated", state="complete")
-        st.success(f"✅ Saved audio to {audio_path}")
+        st.success(f"✅ Saved audio to {audio_path} (duration: {actual_duration:.2f}s)")
 
         # Provide download button
         with open(audio_path, "rb") as f:
@@ -1907,219 +1969,375 @@ def export_resolve_script(config: ProjectConfig) -> None:
 
 
 def render_img2video_tab(config: ProjectConfig) -> None:
-    """Render image-to-video conversion interface."""
-    st.header("Image to Video Conversion")
-    st.caption(
-        "Convert generated images into video clips with configurable duration and transitions"
-    )
+    """Render image-to-video generation interface using Veo 3.1."""
+    st.header("Image to Video Generation (Veo 3.1)")
+    st.caption("Animate generated images with 9:16 aspect ratio, 8-second videos")
 
-    # Check if images exist
+    # Check prerequisites
     project_dir = get_project_path(
         settings.projects_dir, st.session_state.current_project
     )
     images_dir = project_dir / "images"
 
     if not images_dir.exists() or not any(images_dir.iterdir()):
-        st.warning(
-            "⚠️ No images found. Generate images in the Images tab first."
-        )
+        st.warning("⚠️ No images found. Generate images in the Images tab first.")
         return
 
-    # Check if timeline data exists for duration information
+    # Load timeline for duration information
     timeline_path = project_dir / "audio" / "timeline_timestamps.json"
     has_timeline = timeline_path.exists()
 
     if has_timeline:
-        st.info(
-            "✅ Timeline data detected. Shot durations will be based on audio timing."
-        )
-
-        # Load timeline data
         import json
-        with open(timeline_path, "r", encoding="utf-8") as f:
+        with open(timeline_path, "r") as f:
             timeline_data = json.load(f)
+        st.success("✅ Timeline data loaded. Videos will sync with audio in DaVinci Resolve.")
     else:
-        st.info(
-            "💡 **Tip:** Generate full audio first to automatically set shot durations "
-            "based on narration timing. Otherwise, use manual duration settings below."
-        )
+        st.info("💡 Generate full audio first for automatic duration sync in timeline.")
         timeline_data = None
 
     st.divider()
 
-    # Video settings
+    # Video generation info
     st.subheader("Video Settings")
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
-        fps = st.selectbox(
-            "Frame Rate (FPS)",
-            options=[24, 25, 30, 60],
-            index=2,
-            help="Frames per second for output video"
+        st.info(
+            "**Aspect Ratio**: 9:16 (Portrait)\n"
+            "**Duration**: 8 seconds per video\n"
+            "**Model**: Veo 3.1 (Google)"
         )
-
     with col2:
-        resolution = st.selectbox(
-            "Resolution",
-            options=["1920x1080", "1280x720", "3840x2160"],
-            index=0,
-            help="Output video resolution"
-        )
-
-    with col3:
-        codec = st.selectbox(
-            "Video Codec",
-            options=["libx264", "libx265", "prores"],
-            index=0,
-            help="Video codec for output"
+        st.caption(
+            "Videos use the generated image as the first frame and "
+            "animate key elements based on your selected style. "
+            "The 8-second videos will be time-stretched in DaVinci Resolve "
+            "to match actual narration timing."
         )
 
     st.divider()
 
-    # Duration settings
-    st.subheader("Shot Duration Settings")
-
-    if not has_timeline:
-        st.caption("Manual duration mode (no timeline data available)")
-
-        default_duration = st.slider(
-            "Default shot duration (seconds)",
-            min_value=1.0,
-            max_value=30.0,
-            value=5.0,
-            step=0.5,
-            help="Default duration for each image/shot"
-        )
-    else:
-        st.caption("Timeline-based duration mode (using audio timing)")
-        st.write(f"**Total video duration:** {timeline_data['total_duration_timecode']}")
-
-    st.divider()
-
-    # List available images by scene/shot
+    # Scan available images
     st.subheader("Available Images")
 
-    scene_images = {}
-    for scene_dir in sorted(images_dir.iterdir()):
-        if scene_dir.is_dir() and scene_dir.name.startswith("scene_"):
-            scene_num = int(scene_dir.name.split("_")[1])
-            scene_images[scene_num] = []
+    available_shots = []
+    missing_shots = []
 
-            for img_file in sorted(scene_dir.iterdir()):
-                if img_file.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
-                    shot_num = int(img_file.stem.split("_")[1])
-                    scene_images[scene_num].append({
-                        'shot_num': shot_num,
-                        'path': img_file,
-                        'size': img_file.stat().st_size
-                    })
+    for scene in config.scenes:
+        for shot in scene.shots:
+            image_path = images_dir / f"scene_{scene.number:02d}" / f"shot_{shot.number:02d}.png"
 
-    if not scene_images:
-        st.warning("No valid images found in the images directory.")
-        return
+            if image_path.exists():
+                available_shots.append({
+                    'scene': scene,
+                    'shot': shot,
+                    'image_path': image_path
+                })
+            else:
+                missing_shots.append({
+                    'scene_num': scene.number,
+                    'scene_title': scene.title,
+                    'shot_num': shot.number
+                })
 
-    # Display image count
-    total_images = sum(len(shots) for shots in scene_images.values())
-    st.write(f"**Found {total_images} images across {len(scene_images)} scenes**")
+    # Display statistics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Ready for Video", len(available_shots))
+    with col2:
+        st.metric("Missing Images", len(missing_shots))
+    with col3:
+        videos_dir = project_dir / "videos"
+        existing_videos = 0
+        if videos_dir.exists():
+            for scene_dir in videos_dir.iterdir():
+                if scene_dir.is_dir():
+                    existing_videos += len(list(scene_dir.glob("*.mp4")))
+        st.metric("Videos Generated", existing_videos)
 
-    # Show image details in expandable sections
-    with st.expander("View image details", expanded=False):
-        for scene_num, shots in scene_images.items():
-            scene_name = f"Scene {scene_num}"
+    # Display missing images warning
+    if missing_shots:
+        with st.expander("⚠️ Missing Images - Generate These First", expanded=False):
+            st.warning(
+                "These shots need images before video generation. "
+                "Go to the Images tab to generate them."
+            )
+            for item in missing_shots:
+                st.text(
+                    f"  • Scene {item['scene_num']}: {item['scene_title']} "
+                    f"- Shot {item['shot_num']}"
+                )
+
+    # Available shots preview
+    with st.expander("View available shots", expanded=False):
+        for item in available_shots:
+            scene = item['scene']
+            shot = item['shot']
+
+            # Get duration info
+            duration_info = "8s → stretch in Resolve"
             if has_timeline and timeline_data:
-                scene_info = next(
-                    (s for s in timeline_data['scenes'] if s['scene_number'] == scene_num),
+                scene_data = next(
+                    (s for s in timeline_data['scenes'] if s['scene_number'] == scene.number),
                     None
                 )
-                if scene_info:
-                    scene_name = f"Scene {scene_num}: {scene_info['scene_title']}"
-
-            st.markdown(f"**{scene_name}** - {len(shots)} shots")
-            for shot in shots:
-                size_kb = shot['size'] / 1024
-                duration_info = ""
-
-                if has_timeline and timeline_data and scene_info:
-                    shot_info = next(
-                        (s for s in scene_info['shots'] if s['shot_number'] == shot['shot_num']),
+                if scene_data:
+                    shot_data = next(
+                        (s for s in scene_data['shots'] if s['shot_number'] == shot.number),
                         None
                     )
-                    if shot_info:
-                        duration_sec = shot_info['duration_ms'] / 1000
-                        duration_info = f" - {duration_sec:.2f}s"
+                    if shot_data:
+                        actual_duration = shot_data['duration_ms'] / 1000
+                        duration_info = f"8s → {actual_duration:.1f}s"
 
-                st.text(f"  • Shot {shot['shot_num']}: {shot['path'].name} ({size_kb:.1f} KB){duration_info}")
+            st.markdown(
+                f"**Scene {scene.number} - Shot {shot.number}** ({duration_info})\n"
+                f"- Elements: {', '.join(shot.key_elements[:3])}{'...' if len(shot.key_elements) > 3 else ''}\n"
+                f"- Prompt: {shot.video_prompt[:80]}..."
+            )
 
     st.divider()
 
-    # Video generation options
-    st.subheader("Generate Video")
+    # Generation buttons
+    st.subheader("Generate Videos")
 
-    st.info(
-        "🚧 **Coming Soon:** Video generation is planned for a future release.\n\n"
-        "**Planned features:**\n"
-        "- Convert images to video clips with timeline-based durations\n"
-        "- Add transitions between shots (fade, dissolve, etc.)\n"
-        "- Combine with generated audio automatically\n"
-        "- Export as MP4, MOV, or ProRes\n"
-        "- Preview before rendering\n\n"
-        "**Current workaround:** Use the DaVinci Resolve export in the Audio tab "
-        "to automatically import images and audio with correct timing."
-    )
+    if not available_shots:
+        st.warning("No images available for video generation.")
+        return
 
-    # Placeholder buttons (disabled)
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.button(
-            "🎬 Generate Video Timeline",
+        if st.button(
+            "🎬 Generate All Videos",
             use_container_width=True,
-            disabled=True,
-            help="Coming soon: Generate video from images with timeline durations"
-        )
+            help="Generate videos for all available images (may take several minutes per video)"
+        ):
+            generate_all_videos(config, available_shots)
 
     with col2:
-        st.button(
-            "🎞️ Generate Per-Scene Videos",
+        if st.button(
+            "🎞️ Generate by Scene",
             use_container_width=True,
-            disabled=True,
-            help="Coming soon: Generate separate video file for each scene"
-        )
+            help="Select and generate videos for a specific scene"
+        ):
+            st.session_state.show_scene_selector = True
 
     with col3:
-        st.button(
-            "📹 Preview Video",
+        if st.button(
+            "🎥 Generate First Video",
             use_container_width=True,
-            disabled=True,
-            help="Coming soon: Preview the video before rendering"
+            help="Test with first video only (faster)"
+        ):
+            generate_first_video(config, available_shots)
+
+    # Scene selector (shown after clicking Generate by Scene)
+    if st.session_state.get('show_scene_selector', False):
+        st.divider()
+        st.subheader("Select Scene")
+
+        # Group shots by scene
+        scenes_shots = {}
+        for item in available_shots:
+            scene_num = item['scene'].number
+            if scene_num not in scenes_shots:
+                scenes_shots[scene_num] = []
+            scenes_shots[scene_num].append(item)
+
+        scene_options = [
+            f"Scene {num}: {items[0]['scene'].title} ({len(items)} shots)"
+            for num, items in sorted(scenes_shots.items())
+        ]
+
+        selected_scene = st.selectbox(
+            "Choose scene to generate",
+            options=scene_options,
+            key="scene_selector_video"
         )
 
+        if st.button("Generate Scene Videos", use_container_width=True):
+            scene_num = int(selected_scene.split(":")[0].split()[1])
+            scene_items = scenes_shots[scene_num]
+            generate_all_videos(config, scene_items)
+
+    # Individual shot selector
     st.divider()
+    st.subheader("Generate Individual Video")
 
-    # Alternative workflow
-    st.subheader("Alternative Workflow")
-    st.markdown(
-        """
-        While native video generation is being developed, you can use these approaches:
+    shot_options = [
+        f"Scene {item['scene'].number} - Shot {item['shot'].number}: "
+        f"{item['shot'].narration[:60]}..."
+        for item in available_shots
+    ]
 
-        **1. DaVinci Resolve Integration** (Recommended)
-        - Go to the **Audio** tab
-        - Generate full audio with timeline data
-        - Export EDL, FCPXML, or Python script
-        - Import into DaVinci Resolve for automated timeline setup
-
-        **2. Manual FFmpeg (Advanced)**
-        - Use the timeline_timestamps.json for shot durations
-        - Create video clips from images using ffmpeg
-        - Combine clips with audio using video editing software
-
-        **3. Video Editing Software**
-        - Import images into your preferred editor
-        - Use timeline data for precise timing
-        - Add transitions and effects manually
-        """
+    selected = st.selectbox(
+        "Select shot",
+        options=shot_options,
+        help="Choose specific shot to generate video"
     )
+
+    if st.button("Generate Selected Video", use_container_width=True):
+        selected_index = shot_options.index(selected)
+        selected_item = available_shots[selected_index]
+        generate_selected_video(config, selected_item)
+
+
+def generate_all_videos(
+    config: ProjectConfig,
+    available_shots: List[dict]
+) -> None:
+    """Generate videos for all available images."""
+    status = st.status("Generating videos...", expanded=True)
+
+    try:
+        # Initialize VideoGenerator
+        if not settings.gemini_api_key:
+            status.update(label="API key missing", state="error")
+            st.error("❌ GEMINI_API_KEY not configured in .env file")
+            return
+
+        from kurzgesagt.core import VideoGenerator
+
+        generator = VideoGenerator(api_key=settings.gemini_api_key)
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        total = len(available_shots)
+        progress = st.progress(0.0)
+
+        generated_videos = []
+        failed_videos = []
+
+        for idx, item in enumerate(available_shots):
+            scene = item['scene']
+            shot = item['shot']
+            image_path = item['image_path']
+
+            status.update(
+                label=f"Generating Scene {scene.number} Shot {shot.number} ({idx+1}/{total})...",
+                state="running"
+            )
+
+            try:
+                # Get style context
+                style_context = config.style.aesthetic.description
+
+                # Generate video
+                video_path = generator.save_shot_video(
+                    project_dir=project_dir,
+                    scene_number=scene.number,
+                    shot_number=shot.number,
+                    image_path=image_path,
+                    video_prompt=shot.video_prompt,
+                    key_elements=shot.key_elements,
+                    style_context=style_context
+                )
+
+                generated_videos.append(video_path)
+                logger.info(f"Generated video: {video_path}")
+
+            except Exception as e:
+                logger.error(f"Failed Scene {scene.number} Shot {shot.number}: {e}")
+                failed_videos.append(f"Scene {scene.number} Shot {shot.number}: {str(e)}")
+
+            progress.progress((idx + 1) / total)
+
+        status.update(label="Video generation complete", state="complete")
+
+        # Show results
+        st.success(f"✅ Generated {len(generated_videos)} videos!")
+
+        if failed_videos:
+            with st.expander("⚠️ Failed videos", expanded=True):
+                for failure in failed_videos:
+                    st.error(f"  • {failure}")
+
+        # Show save location
+        videos_dir = project_dir / "videos"
+        st.info(f"📁 Videos saved to: {videos_dir}")
+
+    except Exception as e:
+        status.update(label="Video generation failed", state="error")
+        st.error(f"❌ Video generation failed: {str(e)}")
+        logger.exception("Video generation error")
+
+
+def generate_first_video(
+    config: ProjectConfig,
+    available_shots: List[dict]
+) -> None:
+    """Generate only the first video for testing."""
+    if not available_shots:
+        st.warning("No shots available")
+        return
+
+    first_item = available_shots[0]
+    generate_selected_video(config, first_item)
+
+
+def generate_selected_video(
+    config: ProjectConfig,
+    selected_item: dict
+) -> None:
+    """Generate video for a specific shot."""
+    status = st.status("Generating video...", expanded=False)
+
+    try:
+        # Check API key
+        if not settings.gemini_api_key:
+            status.update(label="API key missing", state="error")
+            st.error("❌ GEMINI_API_KEY not configured in .env file")
+            return
+
+        from kurzgesagt.core import VideoGenerator
+
+        generator = VideoGenerator(api_key=settings.gemini_api_key)
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        scene = selected_item['scene']
+        shot = selected_item['shot']
+        image_path = selected_item['image_path']
+
+        status.update(
+            label=f"Generating video (this may take 2-5 minutes)...",
+            state="running"
+        )
+
+        # Get style context
+        style_context = config.style.aesthetic.description
+
+        # Generate video
+        video_path = generator.save_shot_video(
+            project_dir=project_dir,
+            scene_number=scene.number,
+            shot_number=shot.number,
+            image_path=image_path,
+            video_prompt=shot.video_prompt,
+            key_elements=shot.key_elements,
+            style_context=style_context
+        )
+
+        status.update(label="Video generated", state="complete")
+        st.success(f"✅ Saved video to: {video_path}")
+        st.info(f"Scene {scene.number}, Shot {shot.number} - 8 seconds @ 9:16")
+
+        # Show download button
+        with open(video_path, "rb") as f:
+            st.download_button(
+                label="📥 Download Video",
+                data=f.read(),
+                file_name=video_path.name,
+                mime="video/mp4"
+            )
+
+    except Exception as e:
+        status.update(label="Video generation failed", state="error")
+        st.error(f"❌ Video generation failed: {str(e)}")
+        logger.exception("Video generation error")
 
 
 def render_settings_tab(config: ProjectConfig) -> None:

@@ -112,9 +112,15 @@ class ProjectConfig(BaseModel):
     scenes: List[Scene] = Field(default_factory=list, description="Generated scenes")
 
     @property
-    def total_duration(self) -> int:
-        """Calculate total video duration."""
-        return sum(scene.duration for scene in self.scenes)
+    def total_duration(self) -> float:
+        """Calculate total video duration including scene transitions."""
+        if not self.scenes:
+            return 0.0
+        # Sum all scene durations + scene transition durations except the last scene
+        total = sum(scene.duration + scene.transition_duration for scene in self.scenes[:-1])
+        # Add last scene duration without transition
+        total += self.scenes[-1].duration
+        return total
 
     @property
     def scene_count(self) -> int:

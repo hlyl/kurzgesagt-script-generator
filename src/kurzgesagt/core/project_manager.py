@@ -186,3 +186,104 @@ class ProjectManager:
             }
         except Exception:
             return {"name": project_name, "error": "Failed to load metadata"}
+
+    def update_shot_duration(
+        self,
+        project_name: str,
+        scene_number: int,
+        shot_number: int,
+        actual_duration: float,
+    ) -> None:
+        """
+        Update a shot's duration with actual audio duration and save the project.
+
+        Args:
+            project_name: Project name
+            scene_number: Scene number (1-indexed)
+            shot_number: Shot number (1-indexed)
+            actual_duration: Actual audio duration in seconds
+
+        Raises:
+            ProjectNotFoundError: If project doesn't exist
+            ValueError: If scene or shot not found
+        """
+        config = self.load(project_name)
+
+        # Find the scene
+        scene = next((s for s in config.scenes if s.number == scene_number), None)
+        if not scene:
+            raise ValueError(f"Scene {scene_number} not found in project")
+
+        # Find the shot
+        shot = next((sh for sh in scene.shots if sh.number == shot_number), None)
+        if not shot:
+            raise ValueError(
+                f"Shot {shot_number} not found in scene {scene_number}"
+            )
+
+        # Update shot duration
+        shot.duration = actual_duration
+
+        # Recalculate scene duration
+        scene.duration = scene.calculate_duration()
+
+        # Save updated config
+        self.save(config, project_name)
+
+    def update_scene_duration(
+        self, project_name: str, scene_number: int, actual_duration: float
+    ) -> None:
+        """
+        Update a scene's duration with actual total duration and save the project.
+
+        Args:
+            project_name: Project name
+            scene_number: Scene number (1-indexed)
+            actual_duration: Actual scene duration in seconds
+
+        Raises:
+            ProjectNotFoundError: If project doesn't exist
+            ValueError: If scene not found
+        """
+        config = self.load(project_name)
+
+        # Find the scene
+        scene = next((s for s in config.scenes if s.number == scene_number), None)
+        if not scene:
+            raise ValueError(f"Scene {scene_number} not found in project")
+
+        # Update scene duration
+        scene.duration = actual_duration
+
+        # Save updated config
+        self.save(config, project_name)
+
+    def update_transition_durations(
+        self,
+        project_name: str,
+        shot_transition: float = 0.5,
+        scene_transition: float = 1.0,
+    ) -> None:
+        """
+        Update all transition durations in the project.
+
+        Args:
+            project_name: Project name
+            shot_transition: Default shot transition duration in seconds
+            scene_transition: Default scene transition duration in seconds
+
+        Raises:
+            ProjectNotFoundError: If project doesn't exist
+        """
+        config = self.load(project_name)
+
+        # Update scene transitions
+        for scene in config.scenes:
+            scene.transition_duration = scene_transition
+
+            # Update shot transitions
+            for shot in scene.shots:
+                shot.transition_duration = shot_transition
+
+        # Save updated config
+        self.save(config, project_name)

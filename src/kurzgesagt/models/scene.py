@@ -12,7 +12,7 @@ class Shot(BaseModel):
     narration: str = Field(
         ..., min_length=1, description="Voice-over narration for this shot"
     )
-    duration: int = Field(..., ge=1, le=60, description="Shot duration in seconds")
+    duration: float = Field(..., ge=0.1, le=60.0, description="Shot duration in seconds (actual audio duration)")
     description: str = Field(
         ..., min_length=1, description="What this shot accomplishes"
     )
@@ -26,6 +26,9 @@ class Shot(BaseModel):
     )
     transition_note: Optional[str] = Field(
         None, description="How to transition to next shot"
+    )
+    transition_duration: float = Field(
+        default=0.5, ge=0.0, le=5.0, description="Transition duration to next shot in seconds"
     )
 
     @field_validator("key_elements")
@@ -41,8 +44,11 @@ class Scene(BaseModel):
     number: int = Field(..., ge=1, description="Scene number (1-indexed)")
     title: str = Field(..., min_length=1, description="Scene title (uppercase)")
     purpose: str = Field(..., min_length=1, description="Narrative goal of this scene")
-    duration: int = Field(..., ge=1, description="Total scene duration in seconds")
+    duration: float = Field(..., ge=0.1, description="Total scene duration in seconds (actual)")
     shots: List[Shot] = Field(default_factory=list, description="Shots in this scene")
+    transition_duration: float = Field(
+        default=1.0, ge=0.0, le=5.0, description="Transition duration to next scene in seconds"
+    )
 
     @field_validator("title")
     @classmethod
@@ -59,6 +65,12 @@ class Scene(BaseModel):
         """Add a shot to this scene."""
         self.shots.append(shot)
 
-    def calculate_duration(self) -> int:
-        """Calculate total duration from shots."""
-        return sum(shot.duration for shot in self.shots)
+    def calculate_duration(self) -> float:
+        """Calculate total duration from shots including their transitions."""
+        if not self.shots:
+            return 0.0
+        # Sum all shot durations + their transition durations except the last shot's transition
+        total = sum(shot.duration + shot.transition_duration for shot in self.shots[:-1])
+        # Add last shot duration without transition
+        total += self.shots[-1].duration
+        return total

@@ -134,8 +134,16 @@ class ResolveExporter:
                 end_tc = shot["end_timecode"]
                 duration_tc = self._format_duration_timecode(shot["duration_ms"], fps)
 
-                # Video event: AX = Auxiliary source, V = Video, C = Cut
-                clip_name = f"scene_{scene_num:02d}_shot_{shot_num:02d}.png"
+                # Check if video exists, otherwise use image
+                video_path = self.project_dir / "videos" / f"scene_{scene_num:02d}" / f"shot_{shot_num:02d}.mp4"
+
+                if video_path.exists():
+                    clip_name = f"scene_{scene_num:02d}_shot_{shot_num:02d}.mp4"
+                    # Add time-stretch comment for 8s source video
+                    actual_duration = shot["duration_ms"] / 1000
+                    lines.append(f"* VIDEO CLIP: 8s source → stretch to {actual_duration:.2f}s in Resolve")
+                else:
+                    clip_name = f"scene_{scene_num:02d}_shot_{shot_num:02d}.png"
 
                 # EDL format: EventNum Reel Track Edit SourceIn SourceOut RecordIn RecordOut
                 lines.append(
@@ -245,16 +253,30 @@ class ResolveExporter:
         audio_path = str((self.project_dir / "audio" / "full_narration.mp3").absolute())
         lines.append(f'    <asset id="audio1" src="file://{audio_path}" audioSources="1"/>')
 
-        # Define image assets for each shot
+        # Define image/video assets for each shot
         asset_id = 1
         for scene in self.timeline_data["scenes"]:
             for shot in scene["shots"]:
                 scene_num = scene["scene_number"]
                 shot_num = shot["shot_number"]
-                image_path = str((
-                    self.project_dir / "images" / f"scene_{scene_num:02d}" / f"shot_{shot_num:02d}.png"
-                ).absolute())
-                lines.append(f'    <asset id="asset{asset_id}" src="file://{image_path}"/>')
+
+                # Check for video first, fallback to image
+                video_path = self.project_dir / "videos" / f"scene_{scene_num:02d}" / f"shot_{shot_num:02d}.mp4"
+
+                if video_path.exists():
+                    # Use video clip
+                    asset_src = str(video_path.absolute())
+                    lines.append(f'    <asset id="asset{asset_id}" src="file://{asset_src}"/>')
+
+                    # Add comment about time-stretching
+                    actual_duration_ms = shot["duration_ms"]
+                    lines.append(f'    <!-- Time-stretch: 8000ms source to {actual_duration_ms}ms -->')
+                else:
+                    # Fallback to image
+                    image_path = self.project_dir / "images" / f"scene_{scene_num:02d}" / f"shot_{shot_num:02d}.png"
+                    asset_src = str(image_path.absolute())
+                    lines.append(f'    <asset id="asset{asset_id}" src="file://{asset_src}"/>')
+
                 asset_id += 1
 
         lines.append('  </resources>')
@@ -420,16 +442,28 @@ class ResolveExporter:
             "    # Set current folder for imports",
             "    media_pool.SetCurrentFolder(scene_bin)",
             "",
-            "    # Import scene images",
+            "    # Import scene videos or images",
             "    for shot in scene['shots']:",
             "        shot_num = shot['shot_number']",
-            "        image_path = Path(__file__).parent.parent / 'images' / f\"scene_{scene_num:02d}\" / f\"shot_{shot_num:02d}.png\"",
-            "",
-            "        if image_path.exists():",
-            "            media_pool.ImportMedia([str(image_path.absolute())])",
-            "            print(f'  ✅ Imported: {image_path.name}')",
+            "        ",
+            "        # Check for video first, fallback to image",
+            "        video_path = Path(__file__).parent.parent / 'videos' / f\"scene_{scene_num:02d}\" / f\"shot_{shot_num:02d}.mp4\"",
+            "        ",
+            "        if video_path.exists():",
+            "            media_pool.ImportMedia([str(video_path.absolute())])",
+            "            print(f'  ✅ Imported video: {video_path.name}')",
+            "            ",
+            "            # Note: Apply speed adjustment in Resolve timeline",
+            "            actual_duration_ms = shot['duration_ms']",
+            "            speed_factor = (8000 / actual_duration_ms) * 100  # Speed percentage",
+            "            print(f'     → Adjust speed to {speed_factor:.1f}% for proper sync')",
             "        else:",
-            "            print(f'  ⚠️  Image not found: {image_path.name}')",
+            "            image_path = Path(__file__).parent.parent / 'images' / f\"scene_{scene_num:02d}\" / f\"shot_{shot_num:02d}.png\"",
+            "            if image_path.exists():",
+            "                media_pool.ImportMedia([str(image_path.absolute())])",
+            "                print(f'  ✅ Imported image: {image_path.name}')",
+            "            else:",
+            "                print(f'  ⚠️  Media not found: shot_{shot_num:02d}')",
             "",
             "# Create timeline",
             "media_pool.SetCurrentFolder(root_folder)",

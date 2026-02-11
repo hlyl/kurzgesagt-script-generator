@@ -287,3 +287,134 @@ Style guide: Flat vector illustration, simple geometric shapes with clean outlin
 2026-02-10 19:08:27,974 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=308
 2026-02-10 19:08:32,621 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 375360 bytes
 2026-02-10 19:08:32,622 | INFO | kurzgesagt.audio_generator | Audio saved to /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/audio/scene_04.mp3
+2026-02-11 05:44:20,688 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,690 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,691 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,692 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,694 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,694 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_success0/test_image.png
+2026-02-11 05:44:20,706 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,706 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_with_defau0/test_image.png
+2026-02-11 05:44:20,717 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,717 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 05:44:20,718 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,718 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_api_error0/test_image.png
+2026-02-11 05:44:20,720 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,721 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_polling_ti0/test_image.png
+2026-02-11 05:44:20,727 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,728 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_polling_su0/test_image.png
+2026-02-11 05:44:20,739 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,739 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_polling_er0/test_image.png
+2026-02-11 05:44:20,745 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,745 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_no_respons0/test_image.png
+2026-02-11 05:44:20,752 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,752 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_generate_video_extract_er0/test_image.png
+2026-02-11 05:44:20,758 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,758 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_save_shot_video_success0/test_image.png
+2026-02-11 05:44:20,772 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,772 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_save_shot_video_creates_d0/test_image.png
+2026-02-11 05:44:20,784 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:44:20,785 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-7/test_save_shot_video_write_err0/test_image.png
+2026-02-11 05:46:01,717 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,719 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,720 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,721 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,723 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,723 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_success0/test_image.png
+2026-02-11 05:46:01,772 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,772 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_with_defau0/test_image.png
+2026-02-11 05:46:01,784 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,784 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 05:46:01,785 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,786 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_api_error0/test_image.png
+2026-02-11 05:46:01,788 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,788 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_polling_ti0/test_image.png
+2026-02-11 05:46:01,795 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,795 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_polling_su0/test_image.png
+2026-02-11 05:46:01,806 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,806 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_polling_er0/test_image.png
+2026-02-11 05:46:01,813 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,813 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_no_respons0/test_image.png
+2026-02-11 05:46:01,819 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,820 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_generate_video_extract_er0/test_image.png
+2026-02-11 05:46:01,826 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,826 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_save_shot_video_success0/test_image.png
+2026-02-11 05:46:01,838 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,839 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_save_shot_video_creates_d0/test_image.png
+2026-02-11 05:46:01,851 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:46:01,851 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-9/test_save_shot_video_write_err0/test_image.png
+2026-02-11 05:47:26,586 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:47:26,588 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:47:26,589 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:47:26,590 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:47:26,592 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:47:26,592 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-10/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 05:47:26,594 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 05:47:26,594 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-10/test_generate_video_api_error0/test_image.png
+2026-02-11 05:49:10,725 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3939, shots=nested)
+2026-02-11 05:49:40,004 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6275)
+2026-02-11 05:49:40,004 | INFO | kurzgesagt.scene_parser | Parsed scenes=4 shots=8
+2026-02-11 06:07:49,039 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:07:49,041 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:07:49,042 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:07:49,043 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:07:49,045 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:07:49,045 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-11/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:07:49,047 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:07:49,047 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-11/test_generate_video_api_error0/test_image.png
+2026-02-11 06:08:45,164 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:08:45,166 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:08:45,167 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:08:45,168 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:08:45,170 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:08:45,170 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-12/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:08:45,172 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:08:45,172 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-12/test_generate_video_api_error0/test_image.png
+2026-02-11 06:10:00,688 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:10:00,690 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:10:00,692 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:10:00,693 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:10:00,695 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:10:00,695 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-13/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:10:00,697 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:10:00,697 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-13/test_generate_video_api_error0/test_image.png
+2026-02-11 06:17:42,586 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:17:42,589 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:17:42,590 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:17:42,591 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:17:42,592 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:17:42,592 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-15/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:17:42,595 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:17:42,595 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-15/test_generate_video_api_error0/test_image.png
+2026-02-11 06:18:57,104 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:18:57,107 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:18:57,108 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:18:57,110 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:18:57,111 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:18:57,112 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-16/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:18:57,113 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:18:57,113 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-16/test_generate_video_api_error0/test_image.png
+2026-02-11 06:20:21,807 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:20:21,809 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:20:21,811 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:20:21,812 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:20:21,813 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:20:21,813 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-17/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:20:21,815 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:20:21,815 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-17/test_generate_video_api_error0/test_image.png
+2026-02-11 06:21:44,378 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:21:44,380 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:21:44,381 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:21:44,382 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:21:44,384 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:21:44,384 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-18/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:21:44,385 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:21:44,386 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-18/test_generate_video_api_error0/test_image.png
+2026-02-11 06:22:01,822 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:22:01,824 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:22:01,825 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:22:01,826 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:22:01,828 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:22:01,828 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-19/test_generate_video_file_not_f0/nonexistent.png
+2026-02-11 06:22:01,830 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-11 06:22:01,830 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-19/test_generate_video_api_error0/test_image.png

@@ -45,10 +45,11 @@ class ScriptGenerator:
         self.env.filters["duration_format"] = self._format_duration
 
     @staticmethod
-    def _format_duration(seconds: int) -> str:
+    def _format_duration(seconds: float) -> str:
         """Format duration as MM:SS."""
-        minutes = seconds // 60
-        secs = seconds % 60
+        total_seconds = int(seconds)  # Convert to int for formatting
+        minutes = total_seconds // 60
+        secs = total_seconds % 60
         return f"{minutes}:{secs:02d}"
 
     def _get_template(self, template_name: str) -> Template:

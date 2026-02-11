@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 from openai import OpenAI
+
+try:
+    from pydub import AudioSegment
+    PYDUB_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    PYDUB_AVAILABLE = False
 
 from ..config import settings
 from ..utils import get_logger, ensure_directory
@@ -97,7 +103,7 @@ class AudioGenerator:
         model: Optional[str] = None,
         voice: Optional[str] = None,
         speed: float = 1.0,
-    ) -> Path:
+    ) -> Tuple[Path, float]:
         """Generate audio and save to file.
 
         Args:
@@ -108,7 +114,7 @@ class AudioGenerator:
             speed: Speech speed (0.25 to 4.0)
 
         Returns:
-            Path to saved audio file
+            Tuple of (Path to saved audio file, actual duration in seconds)
         """
         audio_bytes = self.generate_audio_bytes(
             text=text,
@@ -124,7 +130,22 @@ class AudioGenerator:
         output_path.write_bytes(audio_bytes)
         logger.info("Audio saved to %s", output_path)
 
-        return output_path
+        # Calculate actual audio duration
+        if PYDUB_AVAILABLE:
+            try:
+                audio = AudioSegment.from_mp3(output_path)
+                duration_seconds = len(audio) / 1000.0  # pydub returns milliseconds
+                logger.info("Audio duration: %.2f seconds", duration_seconds)
+            except Exception as e:
+                logger.warning("Could not determine audio duration with pydub: %s", str(e))
+                # Estimate duration based on text length (rough approximation)
+                duration_seconds = len(text.split()) / 2.5  # ~2.5 words per second
+        else:
+            logger.warning("pydub not available, estimating audio duration")
+            # Estimate duration based on text length (rough approximation)
+            duration_seconds = len(text.split()) / 2.5  # ~2.5 words per second
+
+        return output_path, duration_seconds
 
     def generate_scene_audio(
         self,
@@ -134,7 +155,7 @@ class AudioGenerator:
         model: Optional[str] = None,
         voice: Optional[str] = None,
         speed: float = 1.0,
-    ) -> Path:
+    ) -> Tuple[Path, float]:
         """Generate and save audio for a specific scene.
 
         Args:
@@ -146,7 +167,7 @@ class AudioGenerator:
             speed: Speech speed
 
         Returns:
-            Path to saved audio file
+            Tuple of (Path to saved audio file, actual duration in seconds)
         """
         audio_dir = ensure_directory(project_dir / "audio")
         audio_path = audio_dir / f"scene_{scene_number:02d}.mp3"
@@ -168,7 +189,7 @@ class AudioGenerator:
         model: Optional[str] = None,
         voice: Optional[str] = None,
         speed: float = 1.0,
-    ) -> Path:
+    ) -> Tuple[Path, float]:
         """Generate and save audio for a specific shot.
 
         Args:
@@ -181,7 +202,7 @@ class AudioGenerator:
             speed: Speech speed
 
         Returns:
-            Path to saved audio file
+            Tuple of (Path to saved audio file, actual duration in seconds)
         """
         scene_dir = project_dir / "audio" / f"scene_{scene_number:02d}"
         ensure_directory(scene_dir)
