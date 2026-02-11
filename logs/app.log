@@ -418,3 +418,126 @@ Style guide: Flat vector illustration, simple geometric shapes with clean outlin
 2026-02-11 06:22:01,828 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-19/test_generate_video_file_not_f0/nonexistent.png
 2026-02-11 06:22:01,830 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
 2026-02-11 06:22:01,830 | INFO | kurzgesagt.video_generator | Generating video from /tmp/pytest-of-vtxgaming/pytest-19/test_generate_video_api_error0/test_image.png
+2026-02-11 06:30:30,562 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3939, shots=nested)
+2026-02-11 06:31:32,023 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6275)
+2026-02-11 06:31:32,023 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=18
+2026-02-11 06:35:11,503 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration showing a bike locked on a porch and a bank vault in the background. Use pastel colors and minimal outlines, with clean geometric shapes. The composition centers on the bike and vault, with clear space around them. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:35:11,504 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:35:11,504 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:35:33,584 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration showing data folders of varying sizes stacked, each protected with locks of different designs and sizes, symbolizing varying levels of sensitivity. Pastel colors should be used for the folders and locks, with clear outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:35:33,584 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:35:33,584 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:35:51,771 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration of a balance scale with a bike on one side and a bank vault on the other, highlighting the trade-off. Use pastel colors and minimal outlines with ample negative space for clarity. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:35:51,771 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:35:51,771 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:36:14,265 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration of a bike on a simplistic porch, with a visible lock on the bike. Use a pastel color palette and adhere to minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:36:14,265 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:36:14,266 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:36:40,554 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration featuring icons of a simple article, a brochure, and a computer screen illustrating a website, all in a cohesive layout. Pastel colors with minimal outlines, clear and separated elements. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:36:40,555 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:36:40,555 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:36:58,716 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration showing a transparent box labeled 'Transparency' next to a locked box labeled 'Trade Secrets', with clear visual contrast. Use a pastel color scheme with minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:36:58,716 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:36:58,716 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:37:18,309 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration of a cozy house with a prominent locked front door, symbolizing internal data storage. Use pastel colors and minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:37:18,310 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:37:18,310 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:37:36,544 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration of two minimalist characters collaborating over documents on a table, representing a collaborative work environment. Use a pastel color palette with clear separation of elements. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:37:36,545 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:37:36,545 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:37:56,836 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration contrasting an exaggerated spy movie scene with someone discreetly accessing data online. Use pastel colors and minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:37:56,836 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:37:56,836 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:38:16,853 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration depicting a jewelry box on a bedside table in a bedroom setting. Use pastel colors and a minimalist style with clear outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:38:16,853 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:38:16,853 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:38:35,583 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration showing multiple locks around the jewelry box and a graphic of control signs (like access rules) surrounding it. Incorporate pastel colors with minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:38:35,583 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:38:35,583 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:38:56,442 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration showing surveillance cameras and motion sensors placed around a room, highlighting areas of high importance like the bedroom and office. Use a pastel color strategy with minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:38:56,442 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:38:56,442 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:39:15,071 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration of a large, imposing bank vault with intricate security features around it, symbolizing the strictest confidentiality. Utilize pastel colors and maintain a minimalist outline style. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:39:15,071 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:39:15,071 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:39:33,927 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration showing warning symbols (like exclamation marks) and shattered glass representing damaged reputation around the vault. Apply a pastel color scheme with minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:39:33,927 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:39:33,927 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:39:54,360 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration displaying icons representing patient information, an encryption key, production instructions, and a gene sequence. Ensure a cohesive layout with pastel colors and minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:39:54,361 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:39:54,361 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:40:15,275 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration of a balanced scale with various data icons on both sides, symbolizing the trade-off aspect of classification. Utilize pastel colors with minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:40:15,275 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:40:15,275 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:40:37,040 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration contrasting risk icons (such as an exposed file) on one side with a blocked productivity symbol (like a 'Do Not Enter' sign) on the other. Keep the colors pastel with minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:40:37,040 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:40:37,040 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 06:40:54,185 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A flat 2D illustration featuring a large light bulb (representing the idea) next to a scale measuring impact, conveying the message of thoughtful classification. Use pastel colors and minimal outlines. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-11 06:40:54,185 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-11 06:40:54,185 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-11 07:08:41,684 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=491
+2026-02-11 07:08:46,820 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 600000 bytes
+2026-02-11 07:08:47,070 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=412
+2026-02-11 07:08:53,707 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 502560 bytes
+2026-02-11 07:08:53,919 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=351
+2026-02-11 07:09:00,466 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 417120 bytes
+2026-02-11 07:09:00,675 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=419
+2026-02-11 07:09:07,789 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 511680 bytes
+2026-02-11 07:09:08,004 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=297
+2026-02-11 07:09:13,354 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 357600 bytes
+2026-02-11 07:09:13,565 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=280
+2026-02-11 07:09:17,168 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 337920 bytes
