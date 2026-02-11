@@ -173,10 +173,10 @@ def render_sidebar() -> None:
             st.subheader("Current Project")
             st.info(f"📝 {st.session_state.current_project}")
 
-            if st.button("💾 Save Changes", use_container_width=True):
+            if st.button("💾 Save Changes", width='stretch'):
                 save_current_project()
 
-            if st.button("🗑️ Delete Project", use_container_width=True):
+            if st.button("🗑️ Delete Project", width='stretch'):
                 delete_current_project()
 
 
@@ -189,7 +189,7 @@ def render_new_project_form() -> None:
 
         author = st.text_input("Author (optional)", placeholder="Your name")
 
-        submitted = st.form_submit_button("Create Project", use_container_width=True)
+        submitted = st.form_submit_button("Create Project", width='stretch')
 
         if submitted:
             if not project_title:
@@ -232,7 +232,7 @@ def render_load_project_form() -> None:
         "Select Project", options=projects, label_visibility="collapsed"
     )
 
-    if st.button("Load", use_container_width=True):
+    if st.button("Load", width='stretch'):
         try:
             config = st.session_state.project_manager.load(selected)
             st.session_state.current_project = selected
@@ -346,7 +346,7 @@ def render_overview_tab(config: ProjectConfig) -> None:
     with col2:
         st.metric("Shots", config.shot_count)
     with col3:
-        duration = config.total_duration
+        duration = int(config.total_duration)  # Convert float to int for formatting
         st.metric("Duration", f"{duration//60}:{duration%60:02d}")
 
     st.divider()
@@ -454,7 +454,7 @@ def render_script_tab(config: ProjectConfig) -> None:
 
         col1, col2 = st.columns(2)
         col1.metric("Word Count", word_count)
-        col2.metric("Est. Duration", f"{est_duration//60}:{est_duration%60:02d}")
+        col2.metric("Est. Duration", f"{int(est_duration)//60}:{int(est_duration)%60:02d}")
 
     st.divider()
 
@@ -569,22 +569,22 @@ def render_generate_tab(config: ProjectConfig) -> None:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("📋 Project Setup", use_container_width=True):
+        if st.button("📋 Project Setup", width='stretch'):
             generate_and_download(config, "setup")
 
     with col2:
-        if st.button("✅ Confirmations", use_container_width=True):
+        if st.button("✅ Confirmations", width='stretch'):
             generate_and_download(config, "confirmations")
 
     with col3:
-        if st.button("🎬 Full Script", use_container_width=True):
+        if st.button("🎬 Full Script", width='stretch'):
             generate_and_download(config, "script")
 
     st.divider()
 
     # Full export
     if st.button(
-        "📦 Export Complete Project", type="primary", use_container_width=True
+        "📦 Export Complete Project", type="primary", width='stretch'
     ):
         export_complete_project(config)
 
@@ -638,7 +638,7 @@ def render_images_tab(config: ProjectConfig) -> None:
         )
         if st.button(
             "Clear Reference Image",
-            use_container_width=True,
+            width='stretch',
             key="style_reference_clear",
         ):
             config.style.reference_image_path = None
@@ -670,7 +670,7 @@ def render_images_tab(config: ProjectConfig) -> None:
     with col1:
         if st.button(
             "Parse Script Into Scenes",
-            use_container_width=True,
+            width='stretch',
             key="images_parse_script",
         ):
             if not source_text.strip():
@@ -696,7 +696,7 @@ def render_images_tab(config: ProjectConfig) -> None:
     with col2:
         if st.button(
             "Clear Script",
-            use_container_width=True,
+            width='stretch',
             key="images_clear_script",
         ):
             st.session_state.image_source_text = ""
@@ -709,14 +709,14 @@ def render_images_tab(config: ProjectConfig) -> None:
 
     if st.button(
         "Generate Scene Images",
-        use_container_width=True,
+        width='stretch',
         key="images_generate_all",
     ):
         generate_scene_images(config)
 
     if st.button(
         "Generate First Image",
-        use_container_width=True,
+        width='stretch',
         key="images_generate_first",
     ):
         generate_first_image(config)
@@ -743,7 +743,7 @@ def render_images_tab(config: ProjectConfig) -> None:
     )
     if st.button(
         "Generate Selected Image",
-        use_container_width=True,
+        width='stretch',
         key="images_generate_selected",
         disabled=not selectable_shots,
     ):
@@ -1193,7 +1193,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
     with col1:
         if st.button(
             "🎙️ Generate Full Audio",
-            use_container_width=True,
+            width='stretch',
             help="Generate a single audio file for the entire script with pauses",
         ):
             generate_full_audio(
@@ -1203,7 +1203,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
     with col2:
         if st.button(
             "📂 Generate by Scene",
-            use_container_width=True,
+            width='stretch',
             help="Generate separate audio files for each scene",
         ):
             generate_audio_by_scene(config, tts_model, tts_voice, tts_speed)
@@ -1211,7 +1211,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
     with col3:
         if st.button(
             "🎬 Generate by Shot",
-            use_container_width=True,
+            width='stretch',
             help="Generate separate audio files for each shot",
         ):
             generate_audio_by_shot(config, tts_model, tts_voice, tts_speed)
@@ -1257,7 +1257,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
         help="Choose a specific scene or shot to generate audio for",
     )
 
-    if st.button("Generate Selected Audio", use_container_width=True):
+    if st.button("Generate Selected Audio", width='stretch'):
         selected_index = next(
             (idx for idx, item in enumerate(selectable_items) if item[0] == selected_item),
             0,
@@ -1292,7 +1292,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
         with col1:
             if st.button(
                 "📋 Export EDL",
-                use_container_width=True,
+                width='stretch',
                 help="Generate CMX 3600 EDL file for cut lists and basic timeline structure"
             ):
                 export_resolve_edl(config)
@@ -1300,7 +1300,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
         with col2:
             if st.button(
                 "📄 Export FCPXML",
-                use_container_width=True,
+                width='stretch',
                 help="Generate Final Cut Pro XML with markers and organized bins"
             ):
                 export_resolve_fcpxml(config)
@@ -1308,7 +1308,7 @@ def render_audio_tab(config: ProjectConfig) -> None:
         with col3:
             if st.button(
                 "🐍 Generate Resolve Script",
-                use_container_width=True,
+                width='stretch',
                 help="Create Python script for direct DaVinci Resolve API automation"
             ):
                 export_resolve_script(config)
@@ -2111,7 +2111,7 @@ def render_img2video_tab(config: ProjectConfig) -> None:
     with col1:
         if st.button(
             "🎬 Generate All Videos",
-            use_container_width=True,
+            width='stretch',
             help="Generate videos for all available images (may take several minutes per video)"
         ):
             generate_all_videos(config, available_shots)
@@ -2119,7 +2119,7 @@ def render_img2video_tab(config: ProjectConfig) -> None:
     with col2:
         if st.button(
             "🎞️ Generate by Scene",
-            use_container_width=True,
+            width='stretch',
             help="Select and generate videos for a specific scene"
         ):
             st.session_state.show_scene_selector = True
@@ -2127,7 +2127,7 @@ def render_img2video_tab(config: ProjectConfig) -> None:
     with col3:
         if st.button(
             "🎥 Generate First Video",
-            use_container_width=True,
+            width='stretch',
             help="Test with first video only (faster)"
         ):
             generate_first_video(config, available_shots)
@@ -2156,15 +2156,16 @@ def render_img2video_tab(config: ProjectConfig) -> None:
             key="scene_selector_video"
         )
 
-        if st.button("Generate Scene Videos", use_container_width=True):
+        if st.button("Generate Scene Videos", width='stretch'):
             scene_num = int(selected_scene.split(":")[0].split()[1])
             scene_items = scenes_shots[scene_num]
             generate_all_videos(config, scene_items)
 
-    # Individual shot selector
+    # Individual shot selector with thumbnails
     st.divider()
     st.subheader("Generate Individual Video")
 
+    # Dropdown to select shot
     shot_options = [
         f"Scene {item['scene'].number} - Shot {item['shot'].number}: "
         f"{item['shot'].narration[:60]}..."
@@ -2174,12 +2175,55 @@ def render_img2video_tab(config: ProjectConfig) -> None:
     selected = st.selectbox(
         "Select shot",
         options=shot_options,
-        help="Choose specific shot to generate video"
+        help="Choose specific shot to generate video",
+        key="individual_shot_selector"
     )
 
-    if st.button("Generate Selected Video", use_container_width=True):
-        selected_index = shot_options.index(selected)
-        selected_item = available_shots[selected_index]
+    # Get selected shot details
+    selected_index = shot_options.index(selected)
+    selected_item = available_shots[selected_index]
+    scene = selected_item['scene']
+    shot = selected_item['shot']
+    image_path = selected_item['image_path']
+
+    # Display thumbnail and prompt in two columns
+    col_left, col_right = st.columns([1, 2])
+
+    with col_left:
+        # Show image thumbnail
+        st.image(
+            str(image_path),
+            caption=f"Scene {scene.number}, Shot {shot.number}",
+            width='stretch'
+        )
+
+        # Show duration from project config (audio duration)
+        st.markdown(f"**Duration:** {shot.duration:.2f}s")
+
+        # Show transition duration
+        st.caption(f"Transition: {shot.transition_duration:.1f}s")
+
+    with col_right:
+        # Show video prompt
+        st.text_area(
+            "Video Animation Prompt",
+            value=shot.video_prompt,
+            height=150,
+            disabled=True,
+            key=f"prompt_scene_{scene.number}_shot_{shot.number}"
+        )
+
+        # Show key elements
+        if shot.key_elements:
+            st.markdown("**Key Elements:**")
+            st.caption(", ".join(shot.key_elements))
+
+        # Show narration
+        with st.expander("View Narration"):
+            st.write(shot.narration)
+
+    # Generate button below the preview
+    if st.button("🎬 Generate Video for Selected Shot", width='stretch', type="primary"):
         generate_selected_video(config, selected_item)
 
 
