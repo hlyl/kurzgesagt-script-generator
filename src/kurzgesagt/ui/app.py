@@ -14,8 +14,10 @@ if str(ROOT_DIR) not in sys.path:
 
 from kurzgesagt.config import settings
 from kurzgesagt.core import (
+    AudioGenerator,
     ProjectManager,
     PromptOptimizer,
+    ResolveExporter,
     SceneParser,
     ScriptGenerator,
 )
@@ -103,6 +105,13 @@ def init_session_state() -> None:
     if "prompt_optimizer" not in st.session_state:
         st.session_state.prompt_optimizer = PromptOptimizer()
 
+    if "audio_generator" not in st.session_state:
+        try:
+            st.session_state.audio_generator = AudioGenerator()
+        except Exception as e:
+            st.warning(f"Audio generator not configured: {e}")
+            st.session_state.audio_generator = None
+
     if "current_project" not in st.session_state:
         st.session_state.current_project = None
 
@@ -114,6 +123,9 @@ def init_session_state() -> None:
 
     if "last_parse" not in st.session_state:
         st.session_state.last_parse = None
+
+    if "last_voice_over_hash" not in st.session_state:
+        st.session_state.last_voice_over_hash = None
 
 
 def main() -> None:
@@ -284,7 +296,7 @@ def render_main_interface() -> None:
     config = st.session_state.config
 
     # Tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
         [
             "⚙️ Settings",
             "📋 Overview",
@@ -292,6 +304,8 @@ def render_main_interface() -> None:
             "🎬 Script",
             "📄 Generate",
             "🖼 Images",
+            "🎙️ Audio",
+            "🎥 Img2Video",
         ]
     )
 
@@ -312,6 +326,12 @@ def render_main_interface() -> None:
 
     with tab6:
         render_images_tab(config)
+
+    with tab7:
+        render_audio_tab(config)
+
+    with tab8:
+        render_img2video_tab(config)
 
 
 def render_overview_tab(config: ProjectConfig) -> None:
@@ -465,6 +485,23 @@ def render_script_tab(config: ProjectConfig) -> None:
                     )
 
 
+def _check_script_sync(config: ProjectConfig) -> bool:
+    """Check if the voice-over script has changed since last parse.
+
+    Returns:
+        True if script is in sync with parsed scenes, False if it has changed
+    """
+    if not config.voice_over_script or not config.scenes:
+        return True
+
+    if not st.session_state.last_voice_over_hash:
+        return True
+
+    import hashlib
+    current_hash = hashlib.md5(config.voice_over_script.encode()).hexdigest()
+    return current_hash == st.session_state.last_voice_over_hash
+
+
 def parse_script_with_claude(config: ProjectConfig) -> None:
     """Parse script using Claude API."""
     try:
@@ -483,9 +520,20 @@ def parse_script_with_claude(config: ProjectConfig) -> None:
 
             config.scenes = scenes
             st.session_state.config = config
+
+            # Store hash of voice-over script to track changes
+            import hashlib
+            script_hash = hashlib.md5(config.voice_over_script.encode()).hexdigest()
+            st.session_state.last_voice_over_hash = script_hash
+
+            # Reset audio preview text since scenes have changed
+            if "audio_script_preview_text" in st.session_state:
+                del st.session_state.audio_script_preview_text
+
             st.session_state.last_parse = {
                 "scene_count": len(scenes),
                 "shot_count": sum(scene.shot_count for scene in scenes),
+                "script_hash": script_hash,
             }
             shot_total = sum(scene.shot_count for scene in scenes)
             st.success(
@@ -504,6 +552,14 @@ def render_generate_tab(config: ProjectConfig) -> None:
     if not config.scenes:
         st.warning("⚠️ No scenes defined. Parse your script or add scenes manually.")
         return
+
+    # Check if script has changed since last parse
+    if not _check_script_sync(config):
+        st.warning(
+            "⚠️ **Script has been modified since last parse.** "
+            "The generated documents may not reflect your latest changes. "
+            "Go to the Script tab and re-parse to update the scenes."
+        )
 
     st.caption(
         f"Scenes: {len(config.scenes)} • Shots: {sum(scene.shot_count for scene in config.scenes)}"
@@ -531,8 +587,6 @@ def render_generate_tab(config: ProjectConfig) -> None:
     ):
         export_complete_project(config)
 
-    render_generated_preview()
-
 
 def render_images_tab(config: ProjectConfig) -> None:
     """Render image generation interface with script upload."""
@@ -540,6 +594,14 @@ def render_images_tab(config: ProjectConfig) -> None:
     st.caption(
         "Upload or paste the script content used to derive scene image prompts."
     )
+
+    # Check if script has changed since last parse
+    if config.scenes and not _check_script_sync(config):
+        st.warning(
+            "⚠️ **Script has been modified since last parse.** "
+            "Images will be generated based on the previously parsed scenes. "
+            "Go to the Script tab and re-parse to update the scenes with your latest changes."
+        )
 
     st.subheader("Style Reference Image")
     st.caption(
@@ -788,32 +850,6 @@ def export_complete_project(config: ProjectConfig) -> None:
         st.error(f"❌ Export failed: {str(e)}")
 
 
-def render_generated_preview() -> None:
-    """Render a full-width preview of the last generated document."""
-    last = st.session_state.get("last_generated")
-    if not last:
-        return
-
-    doc_type = last.get("doc_type", "document")
-    content = last.get("content", "")
-
-    st.divider()
-    preview_key = "preview_last_generated"
-    if preview_key not in st.session_state:
-        st.session_state[preview_key] = content
-
-    with st.expander(f"Preview {str(doc_type).title()}", expanded=False):
-        edited_content = st.text_area(
-            "Preview",
-            height=400,
-            label_visibility="collapsed",
-            key=preview_key,
-        )
-
-    if edited_content != content:
-        st.session_state.last_generated["content"] = edited_content
-
-
 def _load_reference_image_payload(
     config: ProjectConfig, project_dir: Path
 ) -> tuple[Optional[bytes], Optional[str]]:
@@ -1002,6 +1038,1088 @@ def generate_selected_image(config: ProjectConfig, index: int) -> None:
     except Exception as e:
         status.update(label="Image generation failed", state="error")
         st.error(f"❌ Image generation failed: {str(e)}")
+
+
+def render_audio_tab(config: ProjectConfig) -> None:
+    """Render audio generation interface."""
+    st.header("Audio Generation")
+    st.caption("Generate text-to-speech audio for your script with automatic pauses.")
+
+    if not st.session_state.audio_generator:
+        st.warning(
+            "⚠️ Audio generator not configured. Set OPENAI_API_KEY in .env file."
+        )
+        return
+
+    if not config.scenes:
+        st.warning("⚠️ No scenes defined. Parse your script in the Script tab first.")
+        return
+
+    # Check if script has changed since last parse
+    if not _check_script_sync(config):
+        st.warning(
+            "⚠️ **Script has been modified since last parse.** "
+            "The audio will be based on the previously parsed scenes. "
+            "Go to the Script tab and re-parse to update the scenes with your latest changes."
+        )
+
+    # TTS Settings
+    st.subheader("TTS Settings")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        tts_model = st.selectbox(
+            "TTS Model",
+            options=["tts-1", "tts-1-hd"],
+            index=0 if settings.openai_tts_model == "tts-1" else 1,
+            help="tts-1 is faster, tts-1-hd has higher quality",
+        )
+
+    with col2:
+        tts_voice = st.selectbox(
+            "Voice",
+            options=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+            index=["alloy", "echo", "fable", "onyx", "nova", "shimmer"].index(
+                settings.openai_tts_voice
+            ),
+            help="Choose the voice for the narration",
+        )
+
+    with col3:
+        tts_speed = st.slider(
+            "Speed",
+            min_value=0.25,
+            max_value=4.0,
+            value=settings.openai_tts_speed,
+            step=0.25,
+            help="Speech speed (1.0 is normal)",
+        )
+
+    st.divider()
+
+    # Pause duration settings
+    st.subheader("Pause Durations")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        section_pause = st.slider(
+            "Break between sections (seconds)",
+            min_value=0.0,
+            max_value=5.0,
+            value=2.0,
+            step=0.5,
+            help="Duration of silence between different scenes/sections",
+            key="audio_section_pause"
+        )
+
+    with col2:
+        shot_pause = st.slider(
+            "Break between shots (seconds)",
+            min_value=0.0,
+            max_value=3.0,
+            value=1.0,
+            step=0.25,
+            help="Duration of silence between shots within a scene",
+            key="audio_shot_pause"
+        )
+
+    st.divider()
+
+    # Display script structure
+    st.subheader("Script Structure with Pauses")
+    st.caption(
+        "Preview the narration from your parsed scenes with pause markers. "
+        "You can edit the narration directly below and it will be used for audio generation."
+    )
+
+    st.info(
+        "💡 **Tip:** Any edits you make here are used immediately for audio generation. "
+        "Use '💾 Save Changes to Project' if you want to update the project's scene data permanently."
+    )
+
+    # Build initial script preview
+    if "audio_script_preview_text" not in st.session_state:
+        st.session_state.audio_script_preview_text = _build_script_preview(
+            config, shot_pause, section_pause
+        )
+
+    # Allow editing of the script preview
+    edited_script = st.text_area(
+        "Script with Pauses",
+        value=st.session_state.audio_script_preview_text,
+        height=400,
+        help="This shows the narration with [PAUSE] markers indicating silence. You can edit this text.",
+        key="audio_script_preview",
+    )
+
+    # Update the preview if changed
+    if edited_script != st.session_state.audio_script_preview_text:
+        st.session_state.audio_script_preview_text = edited_script
+
+    # Add button to reset to original parsed script
+    col_reset1, col_reset2, col_reset3 = st.columns([1, 1, 2])
+    with col_reset1:
+        if st.button("🔄 Reset to Parsed Script", help="Reset to the original parsed script from scenes"):
+            st.session_state.audio_script_preview_text = _build_script_preview(
+                config, shot_pause, section_pause
+            )
+            st.rerun()
+
+    with col_reset2:
+        if st.button("💾 Save Changes to Project", help="Update the scene narration with edited text"):
+            if _update_scenes_from_preview(config, edited_script):
+                st.success("✅ Scene narration updated successfully!")
+                st.session_state.config = config
+                # Update the hash since we've manually edited
+                import hashlib
+                script_hash = hashlib.md5(config.voice_over_script.encode()).hexdigest()
+                st.session_state.last_voice_over_hash = script_hash
+                st.rerun()
+            else:
+                st.error("❌ Failed to update scenes. Check the format.")
+
+    st.divider()
+
+    # Generate options
+    st.subheader("Generate Audio")
+    st.caption(
+        f"Generate audio files with automatic pauses between scenes ({section_pause}s) "
+        f"and shots ({shot_pause}s)."
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button(
+            "🎙️ Generate Full Audio",
+            use_container_width=True,
+            help="Generate a single audio file for the entire script with pauses",
+        ):
+            generate_full_audio(
+                config, tts_model, tts_voice, tts_speed, shot_pause, section_pause
+            )
+
+    with col2:
+        if st.button(
+            "📂 Generate by Scene",
+            use_container_width=True,
+            help="Generate separate audio files for each scene",
+        ):
+            generate_audio_by_scene(config, tts_model, tts_voice, tts_speed)
+
+    with col3:
+        if st.button(
+            "🎬 Generate by Shot",
+            use_container_width=True,
+            help="Generate separate audio files for each shot",
+        ):
+            generate_audio_by_shot(config, tts_model, tts_voice, tts_speed)
+
+    # Scene/Shot selector for individual generation
+    st.divider()
+    st.subheader("Generate Individual Audio")
+
+    # Use the edited preview text for the selector
+    preview_text = st.session_state.get("audio_script_preview_text", "")
+    if not preview_text:
+        preview_text = _build_script_preview(config, shot_pause, section_pause)
+
+    # Parse the preview text to get scene/shot structure
+    scene_data = _parse_preview_text(preview_text)
+
+    # Build scene/shot selector
+    selectable_items = []
+    for scene_info in scene_data:
+        scene_narration = " ".join(scene_info['shot_texts'])
+        preview = scene_narration[:60] + "..." if len(scene_narration) > 60 else scene_narration
+        selectable_items.append((
+            f"Scene {scene_info['number']}: {scene_info['title']}",
+            "scene",
+            scene_info['number'],
+            None,
+            scene_narration
+        ))
+
+        for shot_idx, shot_text in enumerate(scene_info['shot_texts'], start=1):
+            preview = shot_text[:60] + "..." if len(shot_text) > 60 else shot_text
+            selectable_items.append((
+                f"  Shot {shot_idx}: {preview}",
+                "shot",
+                scene_info['number'],
+                shot_idx,
+                shot_text
+            ))
+
+    selected_item = st.selectbox(
+        "Select scene or shot",
+        options=[item[0] for item in selectable_items],
+        help="Choose a specific scene or shot to generate audio for",
+    )
+
+    if st.button("Generate Selected Audio", use_container_width=True):
+        selected_index = next(
+            (idx for idx, item in enumerate(selectable_items) if item[0] == selected_item),
+            0,
+        )
+        item = selectable_items[selected_index]
+        generate_selected_audio(config, item, tts_model, tts_voice, tts_speed)
+
+    # DaVinci Resolve Export Section
+    st.divider()
+    st.subheader("🎬 DaVinci Resolve Export")
+    st.caption("Generate import files for video editing automation")
+
+    # Check if timeline data exists
+    project_dir = get_project_path(
+        settings.projects_dir, st.session_state.current_project
+    )
+    timeline_path = project_dir / "audio" / "timeline_timestamps.json"
+
+    if not timeline_path.exists():
+        st.warning(
+            "⚠️ Generate full audio first to create timeline data. "
+            "Timeline timestamps are required for DaVinci Resolve export."
+        )
+    else:
+        st.info(
+            "💡 **Tip:** These files can be imported into DaVinci Resolve to automatically "
+            "set up your timeline with precise timing, markers, and organized media bins."
+        )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            if st.button(
+                "📋 Export EDL",
+                use_container_width=True,
+                help="Generate CMX 3600 EDL file for cut lists and basic timeline structure"
+            ):
+                export_resolve_edl(config)
+
+        with col2:
+            if st.button(
+                "📄 Export FCPXML",
+                use_container_width=True,
+                help="Generate Final Cut Pro XML with markers and organized bins"
+            ):
+                export_resolve_fcpxml(config)
+
+        with col3:
+            if st.button(
+                "🐍 Generate Resolve Script",
+                use_container_width=True,
+                help="Create Python script for direct DaVinci Resolve API automation"
+            ):
+                export_resolve_script(config)
+
+
+def _build_script_preview(
+    config: ProjectConfig,
+    shot_pause_seconds: float = 1.0,
+    section_pause_seconds: float = 2.0
+) -> str:
+    """Build a preview of the script with pause markers.
+
+    Args:
+        config: Project configuration
+        shot_pause_seconds: Duration of pause between shots (default: 1.0)
+        section_pause_seconds: Duration of pause between sections/scenes (default: 2.0)
+
+    Returns:
+        Script preview text with pause markers
+    """
+    parts = []
+
+    for i, scene in enumerate(config.scenes):
+        parts.append(f"=== SCENE {scene.number}: {scene.title} ===\n")
+
+        for j, shot in enumerate(scene.shots):
+            if shot.narration:
+                parts.append(shot.narration)
+
+                # Add pause marker between shots (except last shot in scene)
+                if j < len(scene.shots) - 1:
+                    parts.append(f"[PAUSE {shot_pause_seconds}s]")
+
+        # Add pause marker between scenes (except last scene)
+        if i < len(config.scenes) - 1:
+            parts.append(f"\n[PAUSE {section_pause_seconds}s]\n")
+
+    return "\n\n".join(parts)
+
+
+def _parse_preview_text(preview_text: str) -> list[dict]:
+    """Parse preview text into structured scene/shot data.
+
+    Args:
+        preview_text: Script preview text with scene markers and pause indicators
+
+    Returns:
+        List of dicts with scene_num, scene_title, and shot_texts
+    """
+    import re
+
+    # Split by scene markers
+    scene_pattern = r"=== SCENE (\d+): (.+?) ===\n"
+    scene_splits = re.split(scene_pattern, preview_text)
+
+    # First element is empty or content before first scene
+    scene_data = []
+    for i in range(1, len(scene_splits), 3):
+        if i + 1 < len(scene_splits):
+            scene_num = int(scene_splits[i])
+            scene_title = scene_splits[i + 1].strip()
+            scene_content = scene_splits[i + 2] if i + 2 < len(scene_splits) else ""
+
+            # Remove pause markers and split into shots
+            # Remove scene pause markers first (handles variable durations)
+            scene_content = re.sub(r'\n\[PAUSE [\d.]+s\]\n', '', scene_content)
+
+            # Split by shot pause markers (handles variable durations)
+            shot_texts = re.split(r'\n\n\[PAUSE [\d.]+s\]\n\n', scene_content)
+
+            scene_data.append({
+                'number': scene_num,
+                'title': scene_title,
+                'shot_texts': [s.strip() for s in shot_texts if s.strip()]
+            })
+
+    return scene_data
+
+
+def _update_scenes_from_preview(config: ProjectConfig, preview_text: str) -> bool:
+    """Update scene narrations from edited preview text.
+
+    Args:
+        config: Project configuration
+        preview_text: Edited script preview text with scene markers
+
+    Returns:
+        True if update was successful, False otherwise
+    """
+    try:
+        scene_data = _parse_preview_text(preview_text)
+
+        # Update scenes in config
+        for scene_info in scene_data:
+            # Find matching scene in config
+            scene = next((s for s in config.scenes if s.number == scene_info['number']), None)
+            if scene and scene_info['shot_texts']:
+                # Update shot narrations
+                for i, shot in enumerate(scene.shots):
+                    if i < len(scene_info['shot_texts']):
+                        shot.narration = scene_info['shot_texts'][i]
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to update scenes from preview: {e}")
+        return False
+
+
+def _ms_to_timecode(milliseconds: int, fps: int = 30) -> str:
+    """Convert milliseconds to timecode format.
+
+    Args:
+        milliseconds: Time in milliseconds
+        fps: Frames per second (default: 30)
+
+    Returns:
+        Timecode string in format HH:MM:SS:FF
+    """
+    total_seconds = milliseconds / 1000
+    hours = int(total_seconds // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    seconds = int(total_seconds % 60)
+    frames = int((total_seconds % 1) * fps)
+
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{frames:02d}"
+
+
+def generate_full_audio(
+    config: ProjectConfig,
+    model: str,
+    voice: str,
+    speed: float,
+    shot_pause_seconds: float = 1.0,
+    section_pause_seconds: float = 2.0,
+) -> None:
+    """Generate a single audio file for the entire script with pauses.
+
+    Args:
+        config: Project configuration
+        model: TTS model to use
+        voice: Voice to use
+        speed: Speech speed
+        shot_pause_seconds: Duration of pause between shots in seconds
+        section_pause_seconds: Duration of pause between sections/scenes in seconds
+    """
+    status = st.status("Generating full audio...", expanded=False)
+
+    try:
+        generator = st.session_state.audio_generator
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+        audio_dir = ensure_directory(project_dir / "audio")
+
+        # Use the edited preview text instead of config.scenes
+        preview_text = st.session_state.get("audio_script_preview_text", "")
+        if not preview_text:
+            preview_text = _build_script_preview(config)
+
+        # Parse the preview text to get scene/shot structure
+        scene_data = _parse_preview_text(preview_text)
+
+        if not scene_data:
+            st.error("❌ No scenes found in preview text")
+            return
+
+        from pydub import AudioSegment
+        from io import BytesIO
+        import json
+
+        combined_audio = AudioSegment.empty()
+        total_scenes = len(scene_data)
+        progress = st.progress(0.0)
+
+        # Track timestamps for each scene and shot
+        fps = 30  # Default FPS for DaVinci Resolve
+        timeline_data = {
+            "project_name": st.session_state.current_project,
+            "total_duration_ms": 0,
+            "fps": fps,
+            "settings": {
+                "tts_model": model,
+                "tts_voice": voice,
+                "tts_speed": speed,
+                "shot_pause_seconds": shot_pause_seconds,
+                "section_pause_seconds": section_pause_seconds,
+            },
+            "scenes": []
+        }
+
+        status.update(label="Generating audio segments...", state="running")
+
+        current_time_ms = 0
+
+        for scene_idx, scene_info in enumerate(scene_data):
+            scene_start_ms = current_time_ms
+            scene_shots = []
+
+            for shot_idx, shot_text in enumerate(scene_info['shot_texts']):
+                shot_start_ms = current_time_ms
+
+                if shot_text and shot_text.strip():
+                    # Generate audio for this shot
+                    audio_bytes = generator.generate_audio_bytes(
+                        text=shot_text,
+                        model=model,
+                        voice=voice,
+                        speed=speed,
+                    )
+
+                    # Load as AudioSegment
+                    audio_segment = AudioSegment.from_mp3(BytesIO(audio_bytes))
+                    shot_duration_ms = len(audio_segment)
+                    combined_audio += audio_segment
+                    current_time_ms += shot_duration_ms
+
+                    # Record shot timing
+                    scene_shots.append({
+                        "shot_number": shot_idx + 1,
+                        "start_ms": shot_start_ms,
+                        "end_ms": current_time_ms,
+                        "duration_ms": shot_duration_ms,
+                        "start_timecode": _ms_to_timecode(shot_start_ms, fps),
+                        "end_timecode": _ms_to_timecode(current_time_ms, fps),
+                        "narration_preview": shot_text[:100] + "..." if len(shot_text) > 100 else shot_text
+                    })
+
+                    # Add pause between shots (except last shot in scene)
+                    if shot_idx < len(scene_info['shot_texts']) - 1:
+                        pause_ms = int(shot_pause_seconds * 1000)
+                        combined_audio += AudioSegment.silent(duration=pause_ms)
+                        current_time_ms += pause_ms
+
+            scene_end_ms = current_time_ms
+
+            # Record scene timing
+            timeline_data["scenes"].append({
+                "scene_number": scene_info['number'],
+                "scene_title": scene_info['title'],
+                "start_ms": scene_start_ms,
+                "end_ms": scene_end_ms,
+                "duration_ms": scene_end_ms - scene_start_ms,
+                "start_timecode": _ms_to_timecode(scene_start_ms, fps),
+                "end_timecode": _ms_to_timecode(scene_end_ms, fps),
+                "shots": scene_shots
+            })
+
+            # Add pause between scenes (except last scene)
+            if scene_idx < len(scene_data) - 1:
+                pause_ms = int(section_pause_seconds * 1000)
+                combined_audio += AudioSegment.silent(duration=pause_ms)
+                current_time_ms += pause_ms
+
+            progress.progress((scene_idx + 1) / total_scenes)
+
+        # Update total duration
+        timeline_data["total_duration_ms"] = current_time_ms
+        timeline_data["total_duration_timecode"] = _ms_to_timecode(current_time_ms, fps)
+
+        # Save combined audio
+        output_path = audio_dir / "full_narration.mp3"
+        status.update(label="Saving audio file...", state="running")
+        combined_audio.export(output_path, format="mp3")
+
+        # Save timeline data as JSON
+        timeline_path = audio_dir / "timeline_timestamps.json"
+        status.update(label="Saving timeline data...", state="running")
+        with open(timeline_path, "w", encoding="utf-8") as f:
+            json.dump(timeline_data, f, indent=2, ensure_ascii=False)
+
+        status.update(label="Audio generation complete", state="complete")
+        st.success(f"✅ Saved full audio to {output_path}")
+        st.info(f"📊 Timeline timestamps saved to {timeline_path}")
+
+        # Provide download buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            with open(output_path, "rb") as f:
+                st.download_button(
+                    label="📥 Download Full Audio",
+                    data=f.read(),
+                    file_name="full_narration.mp3",
+                    mime="audio/mpeg",
+                )
+        with col2:
+            with open(timeline_path, "r", encoding="utf-8") as f:
+                st.download_button(
+                    label="📥 Download Timeline JSON",
+                    data=f.read(),
+                    file_name="timeline_timestamps.json",
+                    mime="application/json",
+                )
+
+    except ImportError:
+        status.update(label="Missing dependency", state="error")
+        st.error(
+            "❌ pydub library is required for audio concatenation. "
+            "Install it with: pip install pydub"
+        )
+    except Exception as e:
+        status.update(label="Audio generation failed", state="error")
+        st.error(f"❌ Audio generation failed: {str(e)}")
+
+
+def generate_audio_by_scene(
+    config: ProjectConfig, model: str, voice: str, speed: float
+) -> None:
+    """Generate separate audio files for each scene."""
+    status = st.status("Generating scene audio...", expanded=False)
+
+    try:
+        generator = st.session_state.audio_generator
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        # Use the edited preview text instead of config.scenes
+        preview_text = st.session_state.get("audio_script_preview_text", "")
+        if not preview_text:
+            preview_text = _build_script_preview(config)
+
+        # Parse the preview text to get scene/shot structure
+        scene_data = _parse_preview_text(preview_text)
+
+        if not scene_data:
+            st.error("❌ No scenes found in preview text")
+            return
+
+        total_scenes = len(scene_data)
+        progress = st.progress(0.0)
+
+        for scene_idx, scene_info in enumerate(scene_data):
+            status.update(
+                label=f"Generating Scene {scene_info['number']}: {scene_info['title']}",
+                state="running",
+            )
+
+            # Combine all shot narrations for this scene
+            scene_narration = " ".join(scene_info['shot_texts'])
+
+            if scene_narration.strip():
+                generator.generate_scene_audio(
+                    project_dir=project_dir,
+                    scene_number=scene_info['number'],
+                    narration=scene_narration,
+                    model=model,
+                    voice=voice,
+                    speed=speed,
+                )
+
+            progress.progress((scene_idx + 1) / total_scenes)
+
+        status.update(label="Scene audio generation complete", state="complete")
+        st.success(f"✅ Generated {total_scenes} scene audio files in {project_dir / 'audio'}")
+
+    except Exception as e:
+        status.update(label="Audio generation failed", state="error")
+        st.error(f"❌ Audio generation failed: {str(e)}")
+
+
+def generate_audio_by_shot(
+    config: ProjectConfig, model: str, voice: str, speed: float
+) -> None:
+    """Generate separate audio files for each shot."""
+    status = st.status("Generating shot audio...", expanded=False)
+
+    try:
+        generator = st.session_state.audio_generator
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        # Use the edited preview text instead of config.scenes
+        preview_text = st.session_state.get("audio_script_preview_text", "")
+        if not preview_text:
+            preview_text = _build_script_preview(config)
+
+        # Parse the preview text to get scene/shot structure
+        scene_data = _parse_preview_text(preview_text)
+
+        if not scene_data:
+            st.error("❌ No scenes found in preview text")
+            return
+
+        # Count total shots
+        total_shots = sum(len(scene_info['shot_texts']) for scene_info in scene_data)
+        progress = st.progress(0.0)
+        completed = 0
+
+        for scene_info in scene_data:
+            for shot_idx, shot_text in enumerate(scene_info['shot_texts'], start=1):
+                if shot_text and shot_text.strip():
+                    status.update(
+                        label=f"Generating Scene {scene_info['number']}, Shot {shot_idx}",
+                        state="running",
+                    )
+
+                    generator.generate_shot_audio(
+                        project_dir=project_dir,
+                        scene_number=scene_info['number'],
+                        shot_number=shot_idx,
+                        narration=shot_text,
+                        model=model,
+                        voice=voice,
+                        speed=speed,
+                    )
+
+                completed += 1
+                progress.progress(completed / total_shots)
+
+        status.update(label="Shot audio generation complete", state="complete")
+        st.success(f"✅ Generated {total_shots} shot audio files in {project_dir / 'audio'}")
+
+    except Exception as e:
+        status.update(label="Audio generation failed", state="error")
+        st.error(f"❌ Audio generation failed: {str(e)}")
+
+
+def generate_selected_audio(
+    config: ProjectConfig,
+    item: tuple,
+    model: str,
+    voice: str,
+    speed: float,
+) -> None:
+    """Generate audio for a selected scene or shot."""
+    item_label, item_type, scene_num, shot_num, narration_text = item
+
+    status = st.status("Generating audio...", expanded=False)
+
+    try:
+        generator = st.session_state.audio_generator
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        if item_type == "scene":
+            status.update(label=f"Generating Scene {scene_num}...", state="running")
+            audio_path = generator.generate_scene_audio(
+                project_dir=project_dir,
+                scene_number=scene_num,
+                narration=narration_text,
+                model=model,
+                voice=voice,
+                speed=speed,
+            )
+        else:  # shot
+            status.update(
+                label=f"Generating Scene {scene_num}, Shot {shot_num}...",
+                state="running",
+            )
+            audio_path = generator.generate_shot_audio(
+                project_dir=project_dir,
+                scene_number=scene_num,
+                shot_number=shot_num,
+                narration=narration_text,
+                model=model,
+                voice=voice,
+                speed=speed,
+            )
+
+        status.update(label="Audio generated", state="complete")
+        st.success(f"✅ Saved audio to {audio_path}")
+
+        # Provide download button
+        with open(audio_path, "rb") as f:
+            st.download_button(
+                label="📥 Download Audio",
+                data=f.read(),
+                file_name=audio_path.name,
+                mime="audio/mpeg",
+            )
+
+    except Exception as e:
+        status.update(label="Audio generation failed", state="error")
+        st.error(f"❌ Audio generation failed: {str(e)}")
+
+
+def export_resolve_edl(config: ProjectConfig) -> None:
+    """Export EDL file for DaVinci Resolve."""
+    status = st.status("Exporting EDL...", expanded=False)
+
+    try:
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        # Initialize exporter
+        exporter = ResolveExporter(project_dir=project_dir, fps=30)
+        exporter.load_timeline_data()
+
+        # Generate EDL
+        exports_dir = settings.exports_dir / st.session_state.current_project
+        edl_path = exports_dir / f"{st.session_state.current_project}.edl"
+
+        status.update(label="Generating EDL file...", state="running")
+        exporter.generate_edl(edl_path)
+
+        status.update(label="EDL export complete", state="complete")
+        st.success(f"✅ Exported EDL to {edl_path}")
+
+        # Provide download button
+        with open(edl_path, "r", encoding="utf-8") as f:
+            st.download_button(
+                label="📥 Download EDL File",
+                data=f.read(),
+                file_name=edl_path.name,
+                mime="text/plain",
+            )
+
+    except Exception as e:
+        status.update(label="EDL export failed", state="error")
+        st.error(f"❌ EDL export failed: {str(e)}")
+
+
+def export_resolve_fcpxml(config: ProjectConfig) -> None:
+    """Export FCPXML file for DaVinci Resolve."""
+    status = st.status("Exporting FCPXML...", expanded=False)
+
+    try:
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        # Initialize exporter
+        exporter = ResolveExporter(project_dir=project_dir, fps=30)
+        exporter.load_timeline_data()
+
+        # Generate FCPXML
+        exports_dir = settings.exports_dir / st.session_state.current_project
+        fcpxml_path = exports_dir / f"{st.session_state.current_project}.fcpxml"
+
+        status.update(label="Generating FCPXML file...", state="running")
+        exporter.generate_fcpxml(fcpxml_path)
+
+        status.update(label="FCPXML export complete", state="complete")
+        st.success(f"✅ Exported FCPXML to {fcpxml_path}")
+
+        # Provide download button
+        with open(fcpxml_path, "r", encoding="utf-8") as f:
+            st.download_button(
+                label="📥 Download FCPXML File",
+                data=f.read(),
+                file_name=fcpxml_path.name,
+                mime="application/xml",
+            )
+
+    except Exception as e:
+        status.update(label="FCPXML export failed", state="error")
+        st.error(f"❌ FCPXML export failed: {str(e)}")
+
+
+def export_resolve_script(config: ProjectConfig) -> None:
+    """Generate Python script for Resolve API."""
+    status = st.status("Generating Resolve script...", expanded=False)
+
+    try:
+        project_dir = get_project_path(
+            settings.projects_dir, st.session_state.current_project
+        )
+
+        # Initialize exporter
+        exporter = ResolveExporter(project_dir=project_dir, fps=30)
+        exporter.load_timeline_data()
+
+        # Generate Python script
+        exports_dir = settings.exports_dir / st.session_state.current_project
+        script_path = exports_dir / f"{st.session_state.current_project}_resolve.py"
+
+        status.update(label="Generating Python script...", state="running")
+        exporter.generate_resolve_script(script_path)
+
+        status.update(label="Script generation complete", state="complete")
+        st.success(f"✅ Generated Resolve script at {script_path}")
+        st.info(
+            "💡 To use this script:\n"
+            "1. Copy the script to your project's audio directory\n"
+            "2. Make sure DaVinci Resolve is running\n"
+            "3. Run the script: `python3 {}_resolve.py`".format(
+                st.session_state.current_project
+            )
+        )
+
+        # Provide download button
+        with open(script_path, "r", encoding="utf-8") as f:
+            st.download_button(
+                label="📥 Download Python Script",
+                data=f.read(),
+                file_name=script_path.name,
+                mime="text/x-python",
+            )
+
+    except Exception as e:
+        status.update(label="Script generation failed", state="error")
+        st.error(f"❌ Script generation failed: {str(e)}")
+
+
+def render_img2video_tab(config: ProjectConfig) -> None:
+    """Render image-to-video conversion interface."""
+    st.header("Image to Video Conversion")
+    st.caption(
+        "Convert generated images into video clips with configurable duration and transitions"
+    )
+
+    # Check if images exist
+    project_dir = get_project_path(
+        settings.projects_dir, st.session_state.current_project
+    )
+    images_dir = project_dir / "images"
+
+    if not images_dir.exists() or not any(images_dir.iterdir()):
+        st.warning(
+            "⚠️ No images found. Generate images in the Images tab first."
+        )
+        return
+
+    # Check if timeline data exists for duration information
+    timeline_path = project_dir / "audio" / "timeline_timestamps.json"
+    has_timeline = timeline_path.exists()
+
+    if has_timeline:
+        st.info(
+            "✅ Timeline data detected. Shot durations will be based on audio timing."
+        )
+
+        # Load timeline data
+        import json
+        with open(timeline_path, "r", encoding="utf-8") as f:
+            timeline_data = json.load(f)
+    else:
+        st.info(
+            "💡 **Tip:** Generate full audio first to automatically set shot durations "
+            "based on narration timing. Otherwise, use manual duration settings below."
+        )
+        timeline_data = None
+
+    st.divider()
+
+    # Video settings
+    st.subheader("Video Settings")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        fps = st.selectbox(
+            "Frame Rate (FPS)",
+            options=[24, 25, 30, 60],
+            index=2,
+            help="Frames per second for output video"
+        )
+
+    with col2:
+        resolution = st.selectbox(
+            "Resolution",
+            options=["1920x1080", "1280x720", "3840x2160"],
+            index=0,
+            help="Output video resolution"
+        )
+
+    with col3:
+        codec = st.selectbox(
+            "Video Codec",
+            options=["libx264", "libx265", "prores"],
+            index=0,
+            help="Video codec for output"
+        )
+
+    st.divider()
+
+    # Duration settings
+    st.subheader("Shot Duration Settings")
+
+    if not has_timeline:
+        st.caption("Manual duration mode (no timeline data available)")
+
+        default_duration = st.slider(
+            "Default shot duration (seconds)",
+            min_value=1.0,
+            max_value=30.0,
+            value=5.0,
+            step=0.5,
+            help="Default duration for each image/shot"
+        )
+    else:
+        st.caption("Timeline-based duration mode (using audio timing)")
+        st.write(f"**Total video duration:** {timeline_data['total_duration_timecode']}")
+
+    st.divider()
+
+    # List available images by scene/shot
+    st.subheader("Available Images")
+
+    scene_images = {}
+    for scene_dir in sorted(images_dir.iterdir()):
+        if scene_dir.is_dir() and scene_dir.name.startswith("scene_"):
+            scene_num = int(scene_dir.name.split("_")[1])
+            scene_images[scene_num] = []
+
+            for img_file in sorted(scene_dir.iterdir()):
+                if img_file.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
+                    shot_num = int(img_file.stem.split("_")[1])
+                    scene_images[scene_num].append({
+                        'shot_num': shot_num,
+                        'path': img_file,
+                        'size': img_file.stat().st_size
+                    })
+
+    if not scene_images:
+        st.warning("No valid images found in the images directory.")
+        return
+
+    # Display image count
+    total_images = sum(len(shots) for shots in scene_images.values())
+    st.write(f"**Found {total_images} images across {len(scene_images)} scenes**")
+
+    # Show image details in expandable sections
+    with st.expander("View image details", expanded=False):
+        for scene_num, shots in scene_images.items():
+            scene_name = f"Scene {scene_num}"
+            if has_timeline and timeline_data:
+                scene_info = next(
+                    (s for s in timeline_data['scenes'] if s['scene_number'] == scene_num),
+                    None
+                )
+                if scene_info:
+                    scene_name = f"Scene {scene_num}: {scene_info['scene_title']}"
+
+            st.markdown(f"**{scene_name}** - {len(shots)} shots")
+            for shot in shots:
+                size_kb = shot['size'] / 1024
+                duration_info = ""
+
+                if has_timeline and timeline_data and scene_info:
+                    shot_info = next(
+                        (s for s in scene_info['shots'] if s['shot_number'] == shot['shot_num']),
+                        None
+                    )
+                    if shot_info:
+                        duration_sec = shot_info['duration_ms'] / 1000
+                        duration_info = f" - {duration_sec:.2f}s"
+
+                st.text(f"  • Shot {shot['shot_num']}: {shot['path'].name} ({size_kb:.1f} KB){duration_info}")
+
+    st.divider()
+
+    # Video generation options
+    st.subheader("Generate Video")
+
+    st.info(
+        "🚧 **Coming Soon:** Video generation is planned for a future release.\n\n"
+        "**Planned features:**\n"
+        "- Convert images to video clips with timeline-based durations\n"
+        "- Add transitions between shots (fade, dissolve, etc.)\n"
+        "- Combine with generated audio automatically\n"
+        "- Export as MP4, MOV, or ProRes\n"
+        "- Preview before rendering\n\n"
+        "**Current workaround:** Use the DaVinci Resolve export in the Audio tab "
+        "to automatically import images and audio with correct timing."
+    )
+
+    # Placeholder buttons (disabled)
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.button(
+            "🎬 Generate Video Timeline",
+            use_container_width=True,
+            disabled=True,
+            help="Coming soon: Generate video from images with timeline durations"
+        )
+
+    with col2:
+        st.button(
+            "🎞️ Generate Per-Scene Videos",
+            use_container_width=True,
+            disabled=True,
+            help="Coming soon: Generate separate video file for each scene"
+        )
+
+    with col3:
+        st.button(
+            "📹 Preview Video",
+            use_container_width=True,
+            disabled=True,
+            help="Coming soon: Preview the video before rendering"
+        )
+
+    st.divider()
+
+    # Alternative workflow
+    st.subheader("Alternative Workflow")
+    st.markdown(
+        """
+        While native video generation is being developed, you can use these approaches:
+
+        **1. DaVinci Resolve Integration** (Recommended)
+        - Go to the **Audio** tab
+        - Generate full audio with timeline data
+        - Export EDL, FCPXML, or Python script
+        - Import into DaVinci Resolve for automated timeline setup
+
+        **2. Manual FFmpeg (Advanced)**
+        - Use the timeline_timestamps.json for shot durations
+        - Create video clips from images using ffmpeg
+        - Combine clips with audio using video editing software
+
+        **3. Video Editing Software**
+        - Import images into your preferred editor
+        - Use timeline data for precise timing
+        - Add transitions and effects manually
+        """
+    )
 
 
 def render_settings_tab(config: ProjectConfig) -> None:

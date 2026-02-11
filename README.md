@@ -9,6 +9,9 @@ Production-ready script generator for Kurzgesagt-style explainer videos.
 - 📝 **Model-Specific Optimization** - Optimized for Veo, Kling, Sora, and more
 - 💾 **Project Management** - Save and organize multiple projects
 - 📄 **Multi-Format Export** - Markdown, PDF, DOCX
+- 🎙️ **Audio Generation** - Text-to-speech with automatic pauses between scenes and shots
+- 🖼️ **Image Generation** - AI-powered image generation for scenes with Gemini
+- 🎬 **DaVinci Resolve Integration** - Export EDL, FCPXML, or Python scripts for automated video editing
 - ✅ **Production Ready** - Full test coverage, type safety
 
 ## Quick Start
@@ -45,14 +48,24 @@ streamlit run src/kurzgesagt/ui/app.py
 3. **Add Script** - Paste your voice-over narration
 4. **Parse Scenes** - Auto-generate scenes with Claude AI (requires API key)
 5. **Generate Scripts** - Export production-ready documents
+6. **Generate Images** - Create AI images for each scene/shot (requires Gemini API key)
+7. **Generate Audio** - Create full narration audio with customizable pause durations
+8. **Export for DaVinci Resolve** - Generate EDL, FCPXML, or Python scripts for automated timeline setup
+
+See [DAVINCI_RESOLVE_GUIDE.md](DAVINCI_RESOLVE_GUIDE.md) for detailed video editing automation instructions.
 
 ## API Keys Setup
 
-Claude parsing is optional. You can run the app without a key, but the **Parse Scenes** button will be disabled.
+All API keys are optional. The app gracefully handles missing keys:
+- **ANTHROPIC_API_KEY** - Required for AI scene parsing (Claude)
+- **OPENAI_API_KEY** - Required for audio generation (OpenAI TTS)
+- **GEMINI_API_KEY** - Required for image generation (Google Gemini)
 
 Create or edit .env in the project root:
 ```dotenv
-ANTHROPIC_API_KEY=your_real_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+OPENAI_API_KEY=your_openai_key_here
+GEMINI_API_KEY=your_gemini_key_here
 ```
 
 Optional settings are already defined in .env (model, token limits, ports), and can be customized as needed.
@@ -79,6 +92,40 @@ There is a sample project you can load immediately:
 
 Open the app and load **example_data_classification** from the sidebar to explore a complete workflow.
 
+## Audio Generation
+
+The audio generation tab allows you to create professional text-to-speech narration with automatic pauses:
+
+### Features:
+- **Multiple TTS Models** - Choose between `tts-1` (faster) and `tts-1-hd` (higher quality)
+- **6 Voice Options** - alloy, echo, fable, onyx, nova, shimmer
+- **Adjustable Speed** - Control speech rate from 0.25x to 4.0x
+- **Automatic Pauses** - 2 seconds between scenes, 1 second between shots
+- **Flexible Generation** - Generate full audio, by scene, by shot, or individual segments
+
+### Generation Options:
+1. **Generate Full Audio** - Creates a single MP3 file with all narration and pauses
+2. **Generate by Scene** - Separate audio file for each scene
+3. **Generate by Shot** - Individual audio file for each shot
+4. **Generate Selected** - Choose specific scene or shot to generate
+
+### Requirements:
+- OpenAI API key in .env
+- `pydub` library (automatically installed with dependencies)
+- FFmpeg (required by pydub for audio processing)
+
+To install FFmpeg:
+```bash
+# Ubuntu/Debian
+sudo apt-get install ffmpeg
+
+# macOS
+brew install ffmpeg
+
+# Windows
+# Download from https://ffmpeg.org/download.html
+```
+
 ## Troubleshooting
 
 **“Claude API not configured” warning**
@@ -93,6 +140,18 @@ Open the app and load **example_data_classification** from the sidebar to explor
 
 **Port 8501 already in use**
 - Stop the other process, or change STREAMLIT_SERVER_PORT in .env.
+
+**"Audio generator not configured" warning**
+- Ensure OPENAI_API_KEY is set in .env.
+- Restart the Streamlit app after updating .env.
+
+**"pydub library is required" error**
+- Run `uv sync` to install pydub.
+- Ensure FFmpeg is installed on your system (see Audio Generation section).
+
+**Audio generation is slow**
+- Use `tts-1` model instead of `tts-1-hd` for faster generation.
+- Generate audio by scene/shot instead of full audio for large scripts.
 
 ## Development
 

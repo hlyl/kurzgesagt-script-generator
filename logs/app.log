@@ -257,3 +257,33 @@ Wide shot. A flat illustration of a bank vault, securely closed, with a strong v
 Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
 2026-02-08 22:35:05,938 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
 2026-02-08 22:35:05,938 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7170085)
+2026-02-10 09:12:41,758 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3932, shots=nested)
+2026-02-10 09:14:11,462 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6268)
+2026-02-10 09:14:11,462 | INFO | kurzgesagt.scene_parser | Parsed scenes=8 shots=15
+2026-02-10 09:15:32,138 | INFO | kurzgesagt.image_generator | Image generation prompt:
+A simple jewelry box resting on a clean bedside table symbolizing care and protection. The room background is minimal, emphasizing the security of the box. Flat 2D illustration, clean vector shapes, soft gradients, no text or lettering.
+
+Style guide: Flat vector illustration, simple geometric shapes with clean outlines, no gradients, minimalist characters with round heads and simple features, 2D side view, solid backgrounds. Objects isolated on separate visual layers, clear negative space around elements (20% padding), distinct foreground/midground/background separation, centered composition with room for pan (rule of thirds), consistent light source from top-left, elements sized for scale animation, no overlapping objects where possible No text or lettering in the image.
+2026-02-10 09:15:32,138 | INFO | kurzgesagt.image_generator | Generating image model=gemini-3-pro-image-preview aspect=3:2 size=1K
+2026-02-10 09:15:32,138 | INFO | kurzgesagt.image_generator | Using reference image for style transfer (bytes=7348299)
+2026-02-10 13:06:55,863 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3939, shots=simple)
+2026-02-10 13:07:30,120 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6275)
+2026-02-10 13:07:30,122 | INFO | kurzgesagt.scene_parser | Parsed scenes=6 shots=8
+2026-02-10 13:14:14,851 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3940, shots=simple)
+2026-02-10 13:14:55,585 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6276)
+2026-02-10 13:14:55,585 | INFO | kurzgesagt.scene_parser | Parsed scenes=7 shots=13
+2026-02-10 13:18:22,006 | INFO | kurzgesagt.scene_parser | Parsing script (chars=3951, shots=simple)
+2026-02-10 13:18:59,390 | INFO | kurzgesagt.providers.openai | OpenAI response received (chars=6287)
+2026-02-10 13:18:59,391 | INFO | kurzgesagt.scene_parser | Parsed scenes=3 shots=13
+2026-02-10 19:08:12,771 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=293
+2026-02-10 19:08:19,271 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 355200 bytes
+2026-02-10 19:08:19,271 | INFO | kurzgesagt.audio_generator | Audio saved to /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/audio/scene_01.mp3
+2026-02-10 19:08:19,272 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=278
+2026-02-10 19:08:22,997 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 339840 bytes
+2026-02-10 19:08:22,997 | INFO | kurzgesagt.audio_generator | Audio saved to /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/audio/scene_02.mp3
+2026-02-10 19:08:22,998 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=259
+2026-02-10 19:08:27,974 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 315360 bytes
+2026-02-10 19:08:27,974 | INFO | kurzgesagt.audio_generator | Audio saved to /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/audio/scene_03.mp3
+2026-02-10 19:08:27,974 | INFO | kurzgesagt.audio_generator | Generating audio: model=tts-1 voice=alloy speed=1.0 text_length=308
+2026-02-10 19:08:32,621 | INFO | kurzgesagt.audio_generator | Audio generated successfully: 375360 bytes
+2026-02-10 19:08:32,622 | INFO | kurzgesagt.audio_generator | Audio saved to /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/audio/scene_04.mp3

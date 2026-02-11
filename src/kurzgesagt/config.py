@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     openai_image_model: str = "gpt-image-1"
     openai_image_size: str = "1024x1024"
 
+    # OpenAI TTS Settings
+    openai_tts_model: str = "tts-1"  # or "tts-1-hd" for higher quality
+    openai_tts_voice: str = "alloy"  # alloy, echo, fable, onyx, nova, shimmer
+    openai_tts_speed: float = 1.0  # 0.25 to 4.0
+
     gemini_api_key: Optional[str] = Field(default=None, description="Gemini API key")
     gemini_image_model: str = "gemini-2.5-flash-image"
     gemini_image_size: str = "1024x1024"

@@ -1,0 +1,73 @@
+{
+  "project_name": "example_project",
+  "total_duration_ms": 45230,
+  "total_duration_timecode": "00:00:45:06",
+  "fps": 30,
+  "settings": {
+    "tts_model": "tts-1",
+    "tts_voice": "alloy",
+    "tts_speed": 1.0,
+    "shot_pause_seconds": 1.0,
+    "section_pause_seconds": 2.0
+  },
+  "scenes": [
+    {
+      "scene_number": 1,
+      "scene_title": "Introduction",
+      "start_ms": 0,
+      "end_ms": 12450,
+      "duration_ms": 12450,
+      "start_timecode": "00:00:00:00",
+      "end_timecode": "00:00:12:13",
+      "shots": [
+        {
+          "shot_number": 1,
+          "start_ms": 0,
+          "end_ms": 5230,
+          "duration_ms": 5230,
+          "start_timecode": "00:00:00:00",
+          "end_timecode": "00:00:05:06",
+          "narration_preview": "Welcome to our video about data classification..."
+        },
+        {
+          "shot_number": 2,
+          "start_ms": 6230,
+          "end_ms": 12450,
+          "duration_ms": 6220,
+          "start_timecode": "00:00:06:06",
+          "end_timecode": "00:00:12:13",
+          "narration_preview": "In this video, we'll explore the different types of data..."
+        }
+      ]
+    },
+    {
+      "scene_number": 2,
+      "scene_title": "Main Concept",
+      "start_ms": 14450,
+      "end_ms": 45230,
+      "duration_ms": 30780,
+      "start_timecode": "00:00:14:13",
+      "end_timecode": "00:00:45:06",
+      "shots": [
+        {
+          "shot_number": 1,
+          "start_ms": 14450,
+          "end_ms": 22100,
+          "duration_ms": 7650,
+          "start_timecode": "00:00:14:13",
+          "end_timecode": "00:00:22:03",
+          "narration_preview": "Data can be classified into different categories..."
+        },
+        {
+          "shot_number": 2,
+          "start_ms": 23100,
+          "end_ms": 45230,
+          "duration_ms": 22130,
+          "start_timecode": "00:00:23:03",
+          "end_timecode": "00:00:45:06",
+          "narration_preview": "Understanding these classifications helps us organize information effectively..."
+        }
+      ]
+    }
+  ]
+}
