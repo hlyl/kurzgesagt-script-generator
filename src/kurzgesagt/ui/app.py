@@ -15,12 +15,14 @@ if str(ROOT_DIR) not in sys.path:
 from kurzgesagt.config import settings
 from kurzgesagt.core import (
     AudioGenerator,
+    GoogleDriveUploader,
     ProjectManager,
     PromptOptimizer,
     ResolveExporter,
     SceneParser,
     ScriptGenerator,
     VideoGenerator,
+    VideoGenerationError,
 )
 from kurzgesagt.core.image_generator import ImageGenerator
 from kurzgesagt.models import ProjectConfig
@@ -112,6 +114,22 @@ def init_session_state() -> None:
         except Exception as e:
             st.warning(f"Audio generator not configured: {e}")
             st.session_state.audio_generator = None
+
+    if "google_drive_uploader" not in st.session_state:
+        try:
+            if settings.google_drive_enabled:
+                credentials_path = Path(settings.google_drive_credentials_path) if settings.google_drive_credentials_path else None
+                token_path = Path(settings.google_drive_token_path)
+                st.session_state.google_drive_uploader = GoogleDriveUploader(
+                    credentials_path=credentials_path,
+                    token_path=token_path,
+                    folder_id=settings.google_drive_folder_id
+                )
+            else:
+                st.session_state.google_drive_uploader = None
+        except Exception as e:
+            st.warning(f"Google Drive uploader not configured: {e}")
+            st.session_state.google_drive_uploader = None
 
     if "current_project" not in st.session_state:
         st.session_state.current_project = None
@@ -254,6 +272,46 @@ def save_current_project() -> None:
         st.error(f"❌ Failed to save: {str(e)}")
 
 
+def update_shot_video_prompt(
+    config: ProjectConfig,
+    scene_number: int,
+    shot_number: int,
+    new_prompt: str
+) -> bool:
+    """Update video prompt for a specific shot.
+
+    Args:
+        config: Project configuration
+        scene_number: Scene number
+        shot_number: Shot number
+        new_prompt: New video prompt text
+
+    Returns:
+        True if update was successful, False otherwise
+    """
+    try:
+        # Find the scene
+        scene = next((s for s in config.scenes if s.number == scene_number), None)
+        if not scene:
+            logger.error(f"Scene {scene_number} not found")
+            return False
+
+        # Find the shot
+        shot = next((s for s in scene.shots if s.number == shot_number), None)
+        if not shot:
+            logger.error(f"Shot {shot_number} not found in scene {scene_number}")
+            return False
+
+        # Update the video prompt
+        shot.video_prompt = new_prompt
+        logger.info(f"Updated video prompt for Scene {scene_number} Shot {shot_number}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to update video prompt: {e}")
+        return False
+
+
 def delete_current_project() -> None:
     """Delete current project with confirmation."""
     # This would ideally use a modal dialog
@@ -297,7 +355,7 @@ def render_main_interface() -> None:
     config = st.session_state.config
 
     # Tabs
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs(
         [
             "⚙️ Settings",
             "📋 Overview",
@@ -307,6 +365,7 @@ def render_main_interface() -> None:
             "🖼 Images",
             "🎙️ Audio",
             "🎥 Img2Video",
+            "📤 Export",
         ]
     )
 
@@ -333,6 +392,9 @@ def render_main_interface() -> None:
 
     with tab8:
         render_img2video_tab(config)
+
+    with tab9:
+        render_export_tab(config)
 
 
 def render_overview_tab(config: ProjectConfig) -> None:
@@ -1265,54 +1327,6 @@ def render_audio_tab(config: ProjectConfig) -> None:
         item = selectable_items[selected_index]
         generate_selected_audio(config, item, tts_model, tts_voice, tts_speed)
 
-    # DaVinci Resolve Export Section
-    st.divider()
-    st.subheader("🎬 DaVinci Resolve Export")
-    st.caption("Generate import files for video editing automation")
-
-    # Check if timeline data exists
-    project_dir = get_project_path(
-        settings.projects_dir, st.session_state.current_project
-    )
-    timeline_path = project_dir / "audio" / "timeline_timestamps.json"
-
-    if not timeline_path.exists():
-        st.warning(
-            "⚠️ Generate full audio first to create timeline data. "
-            "Timeline timestamps are required for DaVinci Resolve export."
-        )
-    else:
-        st.info(
-            "💡 **Tip:** These files can be imported into DaVinci Resolve to automatically "
-            "set up your timeline with precise timing, markers, and organized media bins."
-        )
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            if st.button(
-                "📋 Export EDL",
-                width='stretch',
-                help="Generate CMX 3600 EDL file for cut lists and basic timeline structure"
-            ):
-                export_resolve_edl(config)
-
-        with col2:
-            if st.button(
-                "📄 Export FCPXML",
-                width='stretch',
-                help="Generate Final Cut Pro XML with markers and organized bins"
-            ):
-                export_resolve_fcpxml(config)
-
-        with col3:
-            if st.button(
-                "🐍 Generate Resolve Script",
-                width='stretch',
-                help="Create Python script for direct DaVinci Resolve API automation"
-            ):
-                export_resolve_script(config)
-
 
 def _build_script_preview(
     config: ProjectConfig,
@@ -1849,7 +1863,237 @@ def generate_selected_audio(
         st.error(f"❌ Audio generation failed: {str(e)}")
 
 
-def export_resolve_edl(config: ProjectConfig) -> None:
+def render_export_tab(config: ProjectConfig) -> None:
+    """Render export interface for DaVinci Resolve and other post-production workflows."""
+    st.header("📤 Post-Production Export")
+    st.caption("Export your project for DaVinci Resolve and other video editing tools")
+
+    # Check if timeline data exists
+    project_dir = get_project_path(
+        settings.projects_dir, st.session_state.current_project
+    )
+    timeline_path = project_dir / "audio" / "timeline_timestamps.json"
+
+    if not timeline_path.exists():
+        st.warning(
+            "⚠️ **Generate full audio first** to create timeline data. "
+            "Timeline timestamps are required for accurate exports."
+        )
+        st.info(
+            "💡 **Why you need timeline data:**\n"
+            "- Accurate shot timing and duration\n"
+            "- Proper scene organization\n"
+            "- Synchronized audio markers\n\n"
+            "Go to the **🎙️ Audio** tab and click **'🎙️ Generate Full Audio'** first."
+        )
+        return
+
+    # Load timeline data
+    import json
+    with open(timeline_path, "r") as f:
+        timeline_data = json.load(f)
+
+    # Display project stats
+    st.subheader("Project Statistics")
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Total Scenes", len(timeline_data.get('scenes', [])))
+    with col2:
+        total_shots = sum(len(s['shots']) for s in timeline_data.get('scenes', []))
+        st.metric("Total Shots", total_shots)
+    with col3:
+        total_duration = timeline_data.get('total_duration_ms', 0) / 1000
+        st.metric("Duration", f"{total_duration:.1f}s")
+    with col4:
+        # Check for generated assets
+        videos_dir = project_dir / "videos"
+        existing_videos = 0
+        if videos_dir.exists():
+            for scene_dir in videos_dir.iterdir():
+                if scene_dir.is_dir():
+                    existing_videos += len(list(scene_dir.glob("*.mp4")))
+        st.metric("Videos Ready", f"{existing_videos}/{total_shots}")
+
+    st.divider()
+
+    # Export Settings
+    st.subheader("⚙️ Export Settings")
+
+    col_set1, col_set2 = st.columns(2)
+
+    with col_set1:
+        fps = st.selectbox(
+            "Frame Rate (FPS)",
+            options=[23.976, 24, 25, 29.97, 30, 50, 59.94, 60],
+            index=5,  # Default to 30 FPS
+            help="Timeline frame rate for DaVinci Resolve project"
+        )
+
+        resolution = st.selectbox(
+            "Resolution",
+            options=["1080p (1920x1080)", "4K (3840x2160)", "720p (1280x720)"],
+            index=0,
+            help="Target resolution for the timeline"
+        )
+
+    with col_set2:
+        include_markers = st.checkbox(
+            "Include Scene/Shot Markers",
+            value=True,
+            help="Add markers at each scene and shot transition"
+        )
+
+        organize_bins = st.checkbox(
+            "Organize in Bins",
+            value=True,
+            help="Create bins/folders for each scene to organize media"
+        )
+
+    st.divider()
+
+    # DaVinci Resolve Export Section
+    st.subheader("🎬 DaVinci Resolve Export")
+
+    st.info(
+        "💡 **About these exports:**\n\n"
+        "**EDL (Edit Decision List)** - Industry standard format for cut lists and basic timeline structure. "
+        "Best for simple cuts and transitions.\n\n"
+        "**FCPXML** - XML format with full metadata support including markers, bins, and effects. "
+        "Recommended for complex projects with organization.\n\n"
+        "**Python Script** - Direct automation using DaVinci Resolve's Python API. "
+        "Most powerful option for complete project setup."
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button(
+            "📋 Export EDL",
+            width='stretch',
+            help="Generate CMX 3600 EDL file for cut lists and basic timeline structure",
+            use_container_width=True
+        ):
+            export_resolve_edl(config, fps)
+
+    with col2:
+        if st.button(
+            "📄 Export FCPXML",
+            width='stretch',
+            help="Generate Final Cut Pro XML with markers and organized bins",
+            use_container_width=True
+        ):
+            export_resolve_fcpxml(config, fps, include_markers, organize_bins)
+
+    with col3:
+        if st.button(
+            "🐍 Generate Resolve Script",
+            width='stretch',
+            help="Create Python script for direct DaVinci Resolve API automation",
+            use_container_width=True
+        ):
+            export_resolve_script(config, fps, include_markers, organize_bins)
+
+    st.divider()
+
+    # Workflow Guide
+    st.subheader("📚 Workflow Guide")
+
+    with st.expander("How to use EDL in DaVinci Resolve", expanded=False):
+        st.markdown("""
+        ### Using EDL Files in DaVinci Resolve
+
+        1. **Open DaVinci Resolve** and create a new project
+        2. Go to **File** → **Import** → **Timeline** → **EDL**
+        3. Select the exported `.edl` file
+        4. Choose your timeline settings (frame rate, resolution)
+        5. The timeline structure will be imported with all cuts
+
+        **Note:** EDL is basic and doesn't include bins or markers. Use FCPXML for full organization.
+        """)
+
+    with st.expander("How to use FCPXML in DaVinci Resolve", expanded=False):
+        st.markdown("""
+        ### Using FCPXML Files in DaVinci Resolve
+
+        1. **Open DaVinci Resolve** and create a new project
+        2. Go to **File** → **Import** → **Timeline** → **Final Cut Pro XML**
+        3. Select the exported `.fcpxml` file
+        4. The timeline will be created with:
+           - Scene and shot organization in bins
+           - Markers at each transition
+           - Proper timing and duration
+        5. Link your media files (audio and video) to the timeline
+
+        **Recommended for:** Complex projects with multiple scenes and organization needs.
+        """)
+
+    with st.expander("How to use Python Script with DaVinci Resolve", expanded=False):
+        st.markdown(f"""
+        ### Using Python API Script
+
+        1. **Download the Python script** using the button above
+        2. Copy the script to your project's audio directory:
+           ```
+           {project_dir}/audio/
+           ```
+        3. **Make sure DaVinci Resolve is running** (with Python API enabled)
+        4. Open Terminal/Command Prompt and run:
+           ```
+           python3 {st.session_state.current_project}_resolve.py
+           ```
+        5. The script will automatically:
+           - Create a new project
+           - Import all media (audio, videos, images)
+           - Set up the timeline with precise timing
+           - Add markers and organize bins
+           - Configure project settings
+
+        **Most powerful option** - Completely automates project setup with zero manual work.
+
+        **Requirements:**
+        - DaVinci Resolve Studio (free version has limited API access)
+        - Python 3.6+ installed
+        - DaVinci Resolve must be running before executing the script
+        """)
+
+    st.divider()
+
+    # Preview Timeline Structure
+    st.subheader("📊 Timeline Preview")
+    with st.expander("View Timeline Structure", expanded=False):
+        st.caption("This shows how your project will be structured in DaVinci Resolve")
+
+        for scene_data in timeline_data.get('scenes', []):
+            scene_num = scene_data['scene_number']
+            scene_title = next(
+                (s.title for s in config.scenes if s.number == scene_num),
+                f"Scene {scene_num}"
+            )
+
+            scene_start = scene_data['start_time_ms'] / 1000
+            scene_duration = scene_data['duration_ms'] / 1000
+
+            st.markdown(f"**🎬 Scene {scene_num}: {scene_title}**")
+            st.caption(f"Start: {scene_start:.2f}s | Duration: {scene_duration:.2f}s")
+
+            for shot_data in scene_data['shots']:
+                shot_num = shot_data['shot_number']
+                shot_start = shot_data['start_time_ms'] / 1000
+                shot_duration = shot_data['duration_ms'] / 1000
+
+                st.text(f"  └─ Shot {shot_num}: {shot_start:.2f}s - {shot_start + shot_duration:.2f}s ({shot_duration:.2f}s)")
+
+            st.markdown("")
+
+    st.divider()
+
+    # Export Location Info
+    exports_dir = settings.exports_dir / st.session_state.current_project
+    st.info(f"📁 **Export Location:** `{exports_dir}`\n\nAll export files are saved here for easy access.")
+
+
+def export_resolve_edl(config: ProjectConfig, fps: float = 30.0) -> None:
     """Export EDL file for DaVinci Resolve."""
     status = st.status("Exporting EDL...", expanded=False)
 
@@ -1858,8 +2102,8 @@ def export_resolve_edl(config: ProjectConfig) -> None:
             settings.projects_dir, st.session_state.current_project
         )
 
-        # Initialize exporter
-        exporter = ResolveExporter(project_dir=project_dir, fps=30)
+        # Initialize exporter with custom FPS
+        exporter = ResolveExporter(project_dir=project_dir, fps=fps)
         exporter.load_timeline_data()
 
         # Generate EDL
@@ -1871,6 +2115,7 @@ def export_resolve_edl(config: ProjectConfig) -> None:
 
         status.update(label="EDL export complete", state="complete")
         st.success(f"✅ Exported EDL to {edl_path}")
+        st.info(f"📊 **Settings:** {fps} FPS")
 
         # Provide download button
         with open(edl_path, "r", encoding="utf-8") as f:
@@ -1886,7 +2131,7 @@ def export_resolve_edl(config: ProjectConfig) -> None:
         st.error(f"❌ EDL export failed: {str(e)}")
 
 
-def export_resolve_fcpxml(config: ProjectConfig) -> None:
+def export_resolve_fcpxml(config: ProjectConfig, fps: float = 30.0, include_markers: bool = True, organize_bins: bool = True) -> None:
     """Export FCPXML file for DaVinci Resolve."""
     status = st.status("Exporting FCPXML...", expanded=False)
 
@@ -1895,8 +2140,8 @@ def export_resolve_fcpxml(config: ProjectConfig) -> None:
             settings.projects_dir, st.session_state.current_project
         )
 
-        # Initialize exporter
-        exporter = ResolveExporter(project_dir=project_dir, fps=30)
+        # Initialize exporter with custom FPS
+        exporter = ResolveExporter(project_dir=project_dir, fps=fps)
         exporter.load_timeline_data()
 
         # Generate FCPXML
@@ -1908,6 +2153,11 @@ def export_resolve_fcpxml(config: ProjectConfig) -> None:
 
         status.update(label="FCPXML export complete", state="complete")
         st.success(f"✅ Exported FCPXML to {fcpxml_path}")
+        st.info(
+            f"📊 **Settings:** {fps} FPS | "
+            f"Markers: {'✓' if include_markers else '✗'} | "
+            f"Organized Bins: {'✓' if organize_bins else '✗'}"
+        )
 
         # Provide download button
         with open(fcpxml_path, "r", encoding="utf-8") as f:
@@ -1923,7 +2173,7 @@ def export_resolve_fcpxml(config: ProjectConfig) -> None:
         st.error(f"❌ FCPXML export failed: {str(e)}")
 
 
-def export_resolve_script(config: ProjectConfig) -> None:
+def export_resolve_script(config: ProjectConfig, fps: float = 30.0, include_markers: bool = True, organize_bins: bool = True) -> None:
     """Generate Python script for Resolve API."""
     status = st.status("Generating Resolve script...", expanded=False)
 
@@ -1932,8 +2182,8 @@ def export_resolve_script(config: ProjectConfig) -> None:
             settings.projects_dir, st.session_state.current_project
         )
 
-        # Initialize exporter
-        exporter = ResolveExporter(project_dir=project_dir, fps=30)
+        # Initialize exporter with custom FPS
+        exporter = ResolveExporter(project_dir=project_dir, fps=fps)
         exporter.load_timeline_data()
 
         # Generate Python script
@@ -1946,12 +2196,15 @@ def export_resolve_script(config: ProjectConfig) -> None:
         status.update(label="Script generation complete", state="complete")
         st.success(f"✅ Generated Resolve script at {script_path}")
         st.info(
-            "💡 To use this script:\n"
-            "1. Copy the script to your project's audio directory\n"
-            "2. Make sure DaVinci Resolve is running\n"
-            "3. Run the script: `python3 {}_resolve.py`".format(
-                st.session_state.current_project
-            )
+            f"📊 **Settings:** {fps} FPS | "
+            f"Markers: {'✓' if include_markers else '✗'} | "
+            f"Organized Bins: {'✓' if organize_bins else '✗'}"
+        )
+        st.info(
+            "💡 **To use this script:**\n"
+            "1. Make sure DaVinci Resolve is running\n"
+            "2. Copy the script to your project's audio directory\n"
+            f"3. Run: `python3 {st.session_state.current_project}_resolve.py`"
         )
 
         # Provide download button
@@ -2204,14 +2457,30 @@ def render_img2video_tab(config: ProjectConfig) -> None:
         st.caption(f"Transition: {shot.transition_duration:.1f}s")
 
     with col_right:
-        # Show video prompt
-        st.text_area(
-            "Video Animation Prompt",
+        # Editable video prompt with save button
+        st.markdown("**Video Animation Prompt** ✏️")
+        edited_prompt = st.text_area(
+            "Edit the video animation prompt",
             value=shot.video_prompt,
             height=150,
-            disabled=True,
-            key=f"prompt_scene_{scene.number}_shot_{shot.number}"
+            key=f"prompt_scene_{scene.number}_shot_{shot.number}",
+            label_visibility="collapsed"
         )
+
+        # Save button for video prompt
+        col_save, col_reset = st.columns([1, 1])
+        with col_save:
+            if st.button("💾 Save Prompt", key=f"save_prompt_{scene.number}_{shot.number}"):
+                if update_shot_video_prompt(config, scene.number, shot.number, edited_prompt):
+                    save_current_project()
+                else:
+                    st.error("❌ Failed to update video prompt")
+
+        with col_reset:
+            if st.button("↺ Reset", key=f"reset_prompt_{scene.number}_{shot.number}"):
+                st.rerun()
+
+        st.caption("💡 Edit the prompt above and click 'Save Prompt' to update")
 
         # Show key elements
         if shot.key_elements:
@@ -2243,7 +2512,12 @@ def generate_all_videos(
 
         from kurzgesagt.core import VideoGenerator
 
-        generator = VideoGenerator(api_key=settings.gemini_api_key)
+        # Initialize with Google Drive uploader if available
+        generator = VideoGenerator(
+            api_key=settings.gemini_api_key,
+            drive_uploader=st.session_state.get('google_drive_uploader'),
+            keep_local_copy=settings.google_drive_keep_local_copy
+        )
         project_dir = get_project_path(
             settings.projects_dir, st.session_state.current_project
         )
@@ -2253,6 +2527,7 @@ def generate_all_videos(
 
         generated_videos = []
         failed_videos = []
+        drive_uploads = []
 
         for idx, item in enumerate(available_shots):
             scene = item['scene']
@@ -2269,7 +2544,7 @@ def generate_all_videos(
                 style_context = config.style.aesthetic.description
 
                 # Generate video
-                video_path = generator.save_shot_video(
+                result = generator.save_shot_video(
                     project_dir=project_dir,
                     scene_number=scene.number,
                     shot_number=shot.number,
@@ -2279,9 +2554,35 @@ def generate_all_videos(
                     style_context=style_context
                 )
 
-                generated_videos.append(video_path)
-                logger.info(f"Generated video: {video_path}")
+                if isinstance(result, dict):
+                    # Success with Drive upload
+                    if 'local_path' in result:
+                        generated_videos.append(result['local_path'])
+                        logger.info(f"Generated and uploaded video: {result['local_path']}")
+                    else:
+                        # Video uploaded to Drive but local copy deleted
+                        logger.info(f"Generated and uploaded video to Drive (local copy deleted)")
 
+                    drive_uploads.append({
+                        'scene': scene.number,
+                        'shot': shot.number,
+                        'drive_link': result['drive_link']
+                    })
+                elif isinstance(result, Path):
+                    # Success - video was downloaded and saved locally only
+                    generated_videos.append(result)
+                    logger.info(f"Generated video: {result}")
+                else:
+                    # Manual download required - result is a URI
+                    logger.warning(f"Video generated but requires manual download: {result}")
+                    failed_videos.append(
+                        f"Scene {scene.number} Shot {shot.number}: Manual download required - "
+                        f"automatic download failed due to permissions. URI: {result}"
+                    )
+
+            except VideoGenerationError as e:
+                logger.error(f"Failed Scene {scene.number} Shot {shot.number}: {e}")
+                failed_videos.append(f"Scene {scene.number} Shot {shot.number}: {str(e)}")
             except Exception as e:
                 logger.error(f"Failed Scene {scene.number} Shot {shot.number}: {e}")
                 failed_videos.append(f"Scene {scene.number} Shot {shot.number}: {str(e)}")
@@ -2291,16 +2592,27 @@ def generate_all_videos(
         status.update(label="Video generation complete", state="complete")
 
         # Show results
-        st.success(f"✅ Generated {len(generated_videos)} videos!")
+        if drive_uploads:
+            st.success(f"✅ Generated {len(drive_uploads)} videos!")
+            st.success(f"☁️ Uploaded {len(drive_uploads)} videos to Google Drive!")
+            with st.expander("📎 Google Drive Links", expanded=True):
+                for item in drive_uploads:
+                    st.markdown(
+                        f"**Scene {item['scene']} Shot {item['shot']}:** "
+                        f"[Open in Drive]({item['drive_link']})"
+                    )
+        elif generated_videos:
+            st.success(f"✅ Generated {len(generated_videos)} videos!")
 
         if failed_videos:
             with st.expander("⚠️ Failed videos", expanded=True):
                 for failure in failed_videos:
                     st.error(f"  • {failure}")
 
-        # Show save location
-        videos_dir = project_dir / "videos"
-        st.info(f"📁 Videos saved to: {videos_dir}")
+        # Show save location only if videos were saved locally
+        if generated_videos:
+            videos_dir = project_dir / "videos"
+            st.info(f"📁 Local videos saved to: {videos_dir}")
 
     except Exception as e:
         status.update(label="Video generation failed", state="error")
@@ -2337,7 +2649,12 @@ def generate_selected_video(
 
         from kurzgesagt.core import VideoGenerator
 
-        generator = VideoGenerator(api_key=settings.gemini_api_key)
+        # Initialize with Google Drive uploader if available
+        generator = VideoGenerator(
+            api_key=settings.gemini_api_key,
+            drive_uploader=st.session_state.get('google_drive_uploader'),
+            keep_local_copy=settings.google_drive_keep_local_copy
+        )
         project_dir = get_project_path(
             settings.projects_dir, st.session_state.current_project
         )
@@ -2355,7 +2672,7 @@ def generate_selected_video(
         style_context = config.style.aesthetic.description
 
         # Generate video
-        video_path = generator.save_shot_video(
+        result = generator.save_shot_video(
             project_dir=project_dir,
             scene_number=scene.number,
             shot_number=shot.number,
@@ -2366,18 +2683,61 @@ def generate_selected_video(
         )
 
         status.update(label="Video generated", state="complete")
-        st.success(f"✅ Saved video to: {video_path}")
-        st.info(f"Scene {scene.number}, Shot {shot.number} - 8 seconds @ 9:16")
 
-        # Show download button
-        with open(video_path, "rb") as f:
-            st.download_button(
-                label="📥 Download Video",
-                data=f.read(),
-                file_name=video_path.name,
-                mime="video/mp4"
+        if isinstance(result, dict):
+            # Success - video uploaded to Google Drive
+            st.success(f"✅ Video generated successfully!")
+            st.success(f"☁️ Uploaded to Google Drive!")
+            st.info(f"Scene {scene.number}, Shot {shot.number} - 8 seconds @ 9:16")
+
+            # Show Drive link
+            st.markdown(f"**📎 [Open in Google Drive]({result['drive_link']})**")
+
+            # Show video preview and download if local copy exists
+            if 'local_path' in result:
+                st.video(str(result['local_path']))
+                with open(result['local_path'], "rb") as f:
+                    st.download_button(
+                        label="📥 Download Video",
+                        data=f.read(),
+                        file_name=result['local_path'].name,
+                        mime="video/mp4"
+                    )
+            else:
+                st.info("💡 Local copy was not saved. Access your video in Google Drive using the link above.")
+        elif isinstance(result, Path):
+            # Success - video was downloaded and saved locally only
+            st.success(f"✅ Video generated and saved to {result}")
+            st.info(f"Scene {scene.number}, Shot {shot.number} - 8 seconds @ 9:16")
+            st.video(str(result))
+
+            # Show download button
+            with open(result, "rb") as f:
+                st.download_button(
+                    label="📥 Download Video",
+                    data=f.read(),
+                    file_name=result.name,
+                    mime="video/mp4"
+                )
+        else:
+            # Manual download required - result is a URI
+            st.warning(
+                "⚠️ Video generated successfully but automatic download failed due to permissions."
             )
+            st.info(
+                "**How to fix this permanently:**\n\n"
+                "1. Go to [Google Cloud Console](https://console.cloud.google.com/)\n"
+                "2. Enable the Gemini API and set up billing\n"
+                "3. Ensure your API key has Cloud Storage access permissions\n\n"
+                "**For now, download your video manually:**"
+            )
+            st.markdown(f"🔗 [**Download Video Here**]({result})")
+            st.caption("⏰ This link expires after a few hours")
 
+    except VideoGenerationError as e:
+        status.update(label="Video generation failed", state="error")
+        st.error(f"❌ Video generation failed: {str(e)}")
+        logger.exception("Video generation error")
     except Exception as e:
         status.update(label="Video generation failed", state="error")
         st.error(f"❌ Video generation failed: {str(e)}")

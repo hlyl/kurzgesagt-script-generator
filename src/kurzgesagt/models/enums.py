@@ -85,16 +85,15 @@ class Aesthetic(Enum):
 
     # Clean, modern styles
     KURZGESAGT = (
-        "kurzgesagt",
-        "Flat vector illustration, "
-        "simple geometric shapes with clean outlines, no gradients, minimalist characters "
-        "with round heads and simple features, 2D side view, solid backgrounds. "
+        "modern vector infographic style",
+        "Clean vector illustration with thick, consistent black outlines and a friendly, rounded aesthetic. "
+        "All shapes feature soft, radiused corners. Smooth gradient fills within objects create subtle "
+        "volume and depth without harsh shadows or textures. Flat, orthographic perspective. "
         # Animation-ready specs:
-        "Objects isolated on separate visual layers, clear negative space around elements "
-        "(20% padding), distinct foreground/midground/background separation, "
-        "centered composition with room for pan (rule of thirds), "
-        "consistent light source from top-left, elements sized for scale animation, "
-        "no overlapping objects where possible"
+        "Objects isolated on separate layers, clear negative space (20% padding), "
+        "distinct foreground/midground/background separation, centered composition "
+        "with room for camera pans, simplified icon-like symbols, matte finish, "
+        "professional and highly legible layout."
     )
 
     EDUCATIONAL_MINIMAL = (

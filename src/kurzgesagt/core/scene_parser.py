@@ -138,6 +138,15 @@ class SceneParser:
                 "Return ONLY a JSON object with this exact structure (no "
                 "markdown, no explanations):"
             ),
+            "",
+            "CRITICAL JSON FORMATTING RULES:",
+            "- All strings must have properly escaped quotes and newlines",
+            "- Narration text must not contain unescaped quotes or line breaks",
+            "- Use \\n for line breaks within narration strings, not actual newlines",
+            "- Ensure all quotes are closed and all objects/arrays are properly terminated",
+            "- No trailing commas before closing braces or brackets",
+            "",
+            "JSON STRUCTURE:",
             "{",
             '  "scenes": [',
             "    {",
@@ -148,7 +157,7 @@ class SceneParser:
             '      "shots": [',
             "        {",
             '          "number": 1,',
-            '          "narration": "Exact voice-over text for this shot",',
+            '          "narration": "Exact voice-over text for this shot and only this shot",',
             '          "duration": 5,',
             '          "description": "What this shot accomplishes visually",',
             '          "key_elements": ["element1", "element2"],',
@@ -172,6 +181,10 @@ class SceneParser:
             "}",
             "",
             "IMPORTANT:",
+            "- Split the voice-over script SEQUENTIALLY across all shots",
+            "- Each piece of narration must be used EXACTLY ONCE (no repetition between shots)",
+            "- Do NOT repeat or overlap any narration text between different shots or scenes",
+            "- Distribute narration evenly and logically based on narrative flow",
             "- Match narration timing to shot durations",
             "- Keep image prompts focused on composition and style",
             "- Do not include any text or lettering in the images",
@@ -200,16 +213,24 @@ class SceneParser:
 
         try:
             return cast(Dict[str, Any], json.loads(text))
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.warning("Initial JSON parse failed: %s. Attempting repair...", str(e))
             extracted = self._extract_json_text(text)
             cleaned = self._sanitize_json_text(extracted)
             try:
                 return cast(Dict[str, Any], json.loads(cleaned))
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                logger.warning("Cleaned JSON parse failed: %s. Attempting advanced repair...", str(e))
                 repaired = self._repair_json_text(cleaned)
                 try:
                     return cast(Dict[str, Any], json.loads(repaired))
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    logger.warning("Repaired JSON parse failed: %s. Attempting truncation...", str(e))
+                    # Log a sample of the problematic JSON around the error location
+                    if hasattr(e, 'pos') and e.pos:
+                        start = max(0, e.pos - 100)
+                        end = min(len(repaired), e.pos + 100)
+                        logger.debug("Problematic JSON segment: %s", repaired[start:end])
                     return cast(
                         Dict[str, Any],
                         self._parse_json_with_truncation(repaired),
@@ -217,7 +238,7 @@ class SceneParser:
 
     @staticmethod
     def _sanitize_json_text(text: str) -> str:
-        """Attempt to sanitize JSON by escaping newlines inside strings."""
+        """Attempt to sanitize JSON by escaping newlines and special characters inside strings."""
         result: list[str] = []
         in_string = False
         escape = False
@@ -238,11 +259,23 @@ class SceneParser:
                 result.append(ch)
                 continue
 
-            if in_string and ch in {"\n", "\r"}:
-                result.append("\\n")
-                continue
+            # If we're inside a string, escape special characters
+            if in_string:
+                if ch == "\n":
+                    result.append("\\n")
+                    continue
+                elif ch == "\r":
+                    result.append("\\r")
+                    continue
+                elif ch == "\t":
+                    result.append("\\t")
+                    continue
 
             result.append(ch)
+
+        # If we have an unterminated string, close it
+        if in_string:
+            result.append('"')
 
         cleaned = "".join(result)
         # Remove trailing commas before object/array close

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
+import requests
 from google import genai
 from google.genai import types
 
@@ -18,17 +20,37 @@ class VideoGenerationError(RuntimeError):
     """Raised when video generation fails."""
 
 
+@dataclass
+class VideoResult:
+    """Result of video generation with optional manual download URI."""
+    video_bytes: Optional[bytes] = None
+    uri: Optional[str] = None
+    requires_manual_download: bool = False
+    
+    @property
+    def success(self) -> bool:
+        """Check if video bytes were successfully obtained."""
+        return self.video_bytes is not None
+    
+    @property
+    def has_fallback_uri(self) -> bool:
+        """Check if a fallback URI is available for manual download."""
+        return self.uri is not None and self.requires_manual_download
+
+
 class VideoGenerator:
     """Generate animated videos from images using Google Veo 3.1.
 
     Uses image-to-video generation with 9:16 aspect ratio and 8-second duration.
     """
 
-    def __init__(self, api_key: Optional[str] = None):
-        """Initialize with Gemini API key.
+    def __init__(self, api_key: Optional[str] = None, drive_uploader=None, keep_local_copy: bool = True):
+        """Initialize with Gemini API key and optional Google Drive uploader.
 
         Args:
             api_key: Gemini API key (same as image generation)
+            drive_uploader: Optional GoogleDriveUploader instance for auto-upload
+            keep_local_copy: Whether to keep local copy after Drive upload (default: True)
 
         Raises:
             VideoGenerationError: If API key is not provided
@@ -37,7 +59,14 @@ class VideoGenerator:
             raise VideoGenerationError("Gemini API key is required")
 
         self.client = genai.Client(api_key=api_key)
+        self.drive_uploader = drive_uploader
+        self.keep_local_copy = keep_local_copy
         logger.info("VideoGenerator initialized with Gemini API")
+
+        if self.drive_uploader and self.drive_uploader.is_configured():
+            logger.info("Google Drive uploader is configured and ready")
+            if not self.keep_local_copy:
+                logger.info("Local copies will be deleted after Drive upload")
 
     def generate_video_from_image(
         self,
@@ -47,7 +76,7 @@ class VideoGenerator:
         style_context: str,
         duration: int = 8,
         aspect_ratio: str = "9:16"
-    ) -> bytes:
+    ) -> VideoResult:
         """Generate video from image using Veo 3.1.
 
         Args:
@@ -59,10 +88,10 @@ class VideoGenerator:
             aspect_ratio: Output aspect ratio (default: 9:16)
 
         Returns:
-            bytes: MP4 video data
+            VideoResult: Contains video bytes or URI for manual download
 
         Raises:
-            VideoGenerationError: If generation fails
+            VideoGenerationError: If generation fails (not download)
         """
         logger.info(f"Generating video from {image_path}")
 
@@ -90,9 +119,9 @@ class VideoGenerator:
                     image_bytes=image_bytes,
                     mime_type="image/png"
                 ),
-                config=types.VideoConfig(
-                    aspect_ratio="9:16",
-                    duration_seconds=8
+                config=types.GenerateVideosConfig(
+                    aspectRatio="9:16",
+                    durationSeconds=8
                 )
             )
         except Exception as e:
@@ -110,7 +139,8 @@ class VideoGenerator:
             time.sleep(10)  # Wait 10 seconds between polls
 
             try:
-                operation = self.client.operations.get(operation.name)
+                # Pass the operation object itself, not operation.name
+                operation = self.client.operations.get(operation)
             except Exception as e:
                 raise VideoGenerationError(f"Failed to poll operation status: {e}") from e
 
@@ -123,9 +153,71 @@ class VideoGenerator:
             raise VideoGenerationError("Operation completed but no video data returned")
 
         try:
-            video_data = operation.response.video
-            logger.info(f"Video generated successfully ({len(video_data)} bytes)")
-            return video_data
+            # Response contains a list of generated videos
+            if not operation.response.generated_videos:
+                raise VideoGenerationError("No videos generated in response")
+
+            # Get the first generated video (we only requested one)
+            generated_video = operation.response.generated_videos[0]
+            video = generated_video.video
+
+            # Extract bytes from Video object
+            if hasattr(video, 'video_bytes') and video.video_bytes:
+                video_data = video.video_bytes
+                logger.info(f"Video generated successfully ({len(video_data)} bytes)")
+                return VideoResult(video_bytes=video_data)
+            
+            elif hasattr(video, 'uri') and video.uri:
+                # Download video from URI (signed URL from Google Cloud Storage)
+                logger.info(f"Downloading video from URI...")
+                try:
+                    # Use requests for better error handling and redirect support
+                    response = requests.get(video.uri, timeout=300)
+                    response.raise_for_status()
+                    video_data = response.content
+                    logger.info(f"Video downloaded successfully ({len(video_data)} bytes)")
+                    return VideoResult(video_bytes=video_data)
+                    
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 403:
+                        # 403 Forbidden - video generated but can't auto-download
+                        logger.warning(
+                            f"Video generated successfully but automatic download failed (HTTP 403). "
+                            f"Returning URI for manual download."
+                        )
+                        return VideoResult(
+                            uri=video.uri,
+                            requires_manual_download=True
+                        )
+                    else:
+                        # Other HTTP errors - try to return URI as fallback
+                        logger.error(
+                            f"HTTP {e.response.status_code} error downloading video. "
+                            f"Returning URI for manual download."
+                        )
+                        return VideoResult(
+                            uri=video.uri,
+                            requires_manual_download=True
+                        )
+                        
+                except requests.exceptions.Timeout:
+                    logger.warning("Download timed out. Returning URI for manual download.")
+                    return VideoResult(
+                        uri=video.uri,
+                        requires_manual_download=True
+                    )
+                    
+                except Exception as e:
+                    logger.error(f"Failed to download video: {e}. Returning URI for manual download.")
+                    return VideoResult(
+                        uri=video.uri,
+                        requires_manual_download=True
+                    )
+            else:
+                raise VideoGenerationError("Video object has no video_bytes or uri")
+
+        except VideoGenerationError:
+            raise
         except Exception as e:
             raise VideoGenerationError(f"Failed to extract video data: {e}") from e
 
@@ -166,7 +258,7 @@ class VideoGenerator:
         video_prompt: str,
         key_elements: List[str],
         style_context: str
-    ) -> Path:
+    ) -> Union[Path, str, dict]:
         """Generate and save video for a specific shot.
 
         Args:
@@ -179,13 +271,15 @@ class VideoGenerator:
             style_context: Style description
 
         Returns:
-            Path: Saved video file path
+            Path: Saved video file path if successful
+            str: Download URI if automatic download failed
+            dict: Contains 'local_path' and 'drive_file_id' if uploaded to Drive
 
         Raises:
-            VideoGenerationError: If generation or save fails
+            VideoGenerationError: If generation fails
         """
         # Generate video
-        video_bytes = self.generate_video_from_image(
+        result = self.generate_video_from_image(
             image_path=image_path,
             video_prompt=video_prompt,
             key_elements=key_elements,
@@ -194,15 +288,65 @@ class VideoGenerator:
             aspect_ratio="9:16"
         )
 
-        # Save to project directory
-        video_dir = project_dir / "videos" / f"scene_{scene_number:02d}"
-        video_dir.mkdir(parents=True, exist_ok=True)
+        # Check if we got video bytes
+        if result.success:
+            # Save to project directory
+            video_dir = project_dir / "videos" / f"scene_{scene_number:02d}"
+            video_dir.mkdir(parents=True, exist_ok=True)
 
-        video_path = video_dir / f"shot_{shot_number:02d}.mp4"
+            video_path = video_dir / f"shot_{shot_number:02d}.mp4"
 
-        try:
-            video_path.write_bytes(video_bytes)
-            logger.info(f"Saved video to {video_path}")
-            return video_path
-        except Exception as e:
-            raise VideoGenerationError(f"Failed to save video: {e}") from e
+            try:
+                video_path.write_bytes(result.video_bytes)
+                logger.info(f"Saved video to {video_path}")
+
+                # Upload to Google Drive if configured
+                if self.drive_uploader and self.drive_uploader.is_configured():
+                    try:
+                        folder_name = f"scene_{scene_number:02d}"
+                        drive_file_id = self.drive_uploader.upload_video(
+                            video_path=video_path,
+                            folder_name=folder_name,
+                            file_name=f"shot_{shot_number:02d}.mp4"
+                        )
+
+                        logger.info(f"Uploaded to Google Drive (ID: {drive_file_id})")
+
+                        drive_result = {
+                            'drive_file_id': drive_file_id,
+                            'drive_link': self.drive_uploader.get_file_link(drive_file_id)
+                        }
+
+                        # Delete local file if keep_local_copy is False
+                        if not self.keep_local_copy:
+                            try:
+                                video_path.unlink()
+                                logger.info(f"Deleted local copy: {video_path}")
+                            except Exception as e:
+                                logger.warning(f"Failed to delete local file: {e}")
+                        else:
+                            # Include local path only if keeping it
+                            drive_result['local_path'] = video_path
+
+                        return drive_result
+                    except Exception as e:
+                        logger.warning(f"Failed to upload to Google Drive: {e}")
+                        # Continue and return local path only
+
+                return video_path
+
+            except Exception as e:
+                raise VideoGenerationError(f"Failed to save video: {e}") from e
+
+        elif result.has_fallback_uri:
+            # Return URI for manual download
+            logger.info(
+                f"Video generated but requires manual download. "
+                f"URI available for scene {scene_number}, shot {shot_number}"
+            )
+            return result.uri
+
+        else:
+            raise VideoGenerationError(
+                "Video generation completed but no video data or URI available"
+            )

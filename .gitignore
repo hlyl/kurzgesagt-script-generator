@@ -46,6 +46,10 @@ htmlcov/
 .env
 .env.local
 
+# Google Drive OAuth2 credentials
+credentials.json
+token.json
+
 # Projects (user data)
 projects/*
 !projects/.gitkeep
