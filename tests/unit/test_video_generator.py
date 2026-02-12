@@ -1,11 +1,10 @@
 """Tests for video generation from images."""
 
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.kurzgesagt.core.video_generator import VideoGenerator, VideoGenerationError
+from src.kurzgesagt.core.video_generator import VideoGenerationError, VideoGenerator
 
 
 @pytest.fixture
@@ -58,7 +57,8 @@ class TestBuildVideoPrompt:
         result = generator._build_video_prompt(
             base_prompt="Show a flowing river",
             key_elements="water, trees, mountains",
-            style_context="Vibrant colors with smooth animation"
+            style_context="Vibrant colors with smooth animation",
+            duration=8
         )
 
         assert "Show a flowing river" in result
@@ -76,7 +76,8 @@ class TestBuildVideoPrompt:
         result = generator._build_video_prompt(
             base_prompt="Test prompt",
             key_elements="element1",
-            style_context=long_style
+            style_context=long_style,
+            duration=8
         )
 
         # Style should be truncated to 500 chars
@@ -88,9 +89,10 @@ class TestBuildVideoPrompt:
         generator = VideoGenerator(api_key="test_key")
 
         result = generator._build_video_prompt(
-            base_prompt="Base",
-            key_elements="elements",
-            style_context="style"
+            base_prompt="Test base",
+            key_elements="element1",
+            style_context="Test style",
+            duration=5
         )
 
         assert "Smooth cinematic motion" in result

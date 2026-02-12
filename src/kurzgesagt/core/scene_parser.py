@@ -3,6 +3,7 @@
 import json
 import re
 from typing import Any, Dict, List, Optional, cast
+
 from pydantic import ValidationError as PydanticValidationError
 
 from ..models import Scene, Shot, StyleGuide

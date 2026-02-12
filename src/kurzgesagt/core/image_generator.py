@@ -12,8 +12,7 @@ from google.genai import types
 from PIL import Image
 
 from ..config import settings
-from ..utils import get_logger
-from ..utils import ensure_directory
+from ..utils import ensure_directory, get_logger
 
 logger = get_logger("image_generator")
 

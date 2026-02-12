@@ -2,8 +2,6 @@
 
 from types import SimpleNamespace
 
-import pytest
-
 from src.kurzgesagt.config import settings
 from src.kurzgesagt.core.providers import get_scene_provider
 from src.kurzgesagt.core.providers.anthropic_provider import AnthropicSceneProvider

@@ -162,13 +162,13 @@ class ResolveExporter:
 
         # Add audio track at the end
         total_duration_tc = self.timeline_data["total_duration_timecode"]
-        lines.append(f"* AUDIO TRACK")
+        lines.append("* AUDIO TRACK")
         lines.append("")
         lines.append(
             f"{event_number:03d}  AX       AA   C        "
             f"00:00:00:00 {total_duration_tc} 00:00:00:00 {total_duration_tc}"
         )
-        lines.append(f"* FROM CLIP NAME: full_narration.mp3")
+        lines.append("* FROM CLIP NAME: full_narration.mp3")
         lines.append("")
 
         return "\n".join(lines)
@@ -406,7 +406,7 @@ class ResolveExporter:
             "project_manager = resolve.GetProjectManager()",
             "media_storage = resolve.GetMediaStorage()",
             "",
-            f"# Create project",
+            "# Create project",
             f"project_name = '{project_name}'",
             "project = project_manager.CreateProject(project_name)",
             "if not project:",

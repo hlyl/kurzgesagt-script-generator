@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -15,7 +14,7 @@ except (ImportError, ModuleNotFoundError):
     PYDUB_AVAILABLE = False
 
 from ..config import settings
-from ..utils import get_logger, ensure_directory
+from ..utils import ensure_directory, get_logger
 
 logger = get_logger("audio_generator")
 

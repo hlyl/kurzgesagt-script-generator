@@ -79,7 +79,7 @@ class MotionPacing(str, Enum):
 
 class Aesthetic(Enum):
     """Aesthetic presets optimized for image-to-video animation workflows.
-    
+
     Note: Color specifications handled separately via color palette parameter.
     """
 

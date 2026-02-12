@@ -2,8 +2,8 @@
 
 import pytest
 
-from src.kurzgesagt.models import ModelType, Shot
 from src.kurzgesagt.core.prompt_optimizer import PromptOptimizer
+from src.kurzgesagt.models import ModelType, Shot
 
 
 @pytest.fixture

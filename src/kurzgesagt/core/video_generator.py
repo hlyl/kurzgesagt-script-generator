@@ -26,12 +26,12 @@ class VideoResult:
     video_bytes: Optional[bytes] = None
     uri: Optional[str] = None
     requires_manual_download: bool = False
-    
+
     @property
     def success(self) -> bool:
         """Check if video bytes were successfully obtained."""
         return self.video_bytes is not None
-    
+
     @property
     def has_fallback_uri(self) -> bool:
         """Check if a fallback URI is available for manual download."""
@@ -112,8 +112,8 @@ class VideoGenerator:
                     mime_type="image/png"
                 ),
                 config=types.GenerateVideosConfig(
-                    aspectRatio="9:16",
-                    durationSeconds=duration
+                    aspect_ratio="9:16",
+                    duration_seconds=duration
                 )
             )
         except Exception as e:
@@ -158,10 +158,10 @@ class VideoGenerator:
                 video_data = video.video_bytes
                 logger.info(f"Video generated successfully ({len(video_data)} bytes)")
                 return VideoResult(video_bytes=video_data)
-            
+
             elif hasattr(video, 'uri') and video.uri:
                 # Download video from URI (signed URL from Google Cloud Storage)
-                logger.info(f"Downloading video from URI...")
+                logger.info("Downloading video from URI...")
                 try:
                     # Include API key in headers for authentication
                     headers = {
@@ -178,8 +178,8 @@ class VideoGenerator:
                     if e.response.status_code == 403:
                         # 403 Forbidden - video generated but can't auto-download
                         logger.warning(
-                            f"Video generated successfully but automatic download failed (HTTP 403). "
-                            f"Returning URI for manual download."
+                            "Video generated successfully but automatic download failed (HTTP 403). "
+                            "Returning URI for manual download."
                         )
                         return VideoResult(
                             uri=video.uri,
@@ -238,7 +238,7 @@ class VideoGenerator:
         prompt_parts = [
             base_prompt,
             f"\nAnimate these key elements: {key_elements}",
-            f"\nStyle and animation details:",
+            "\nStyle and animation details:",
             style_context[:500],  # Limit style context to 500 chars
             "\nCamera movement: Smooth cinematic motion with subtle zoom and parallax effects.",
             "Maintain visual consistency with the starting image while adding dynamic movement.",

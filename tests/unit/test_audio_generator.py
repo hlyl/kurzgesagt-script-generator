@@ -1,11 +1,10 @@
 """Tests for audio generation."""
 
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.kurzgesagt.core.audio_generator import AudioGenerator, AudioGenerationError
+from src.kurzgesagt.core.audio_generator import AudioGenerationError, AudioGenerator
 
 
 @pytest.fixture

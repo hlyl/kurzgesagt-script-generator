@@ -2,8 +2,6 @@
 
 from types import SimpleNamespace
 
-import pytest
-
 from src.kurzgesagt.config import settings
 from src.kurzgesagt.core.image_generator import ImageGenerator
 

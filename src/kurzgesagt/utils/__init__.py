@@ -7,6 +7,7 @@ from .file_handlers import (
     list_project_directories,
     safe_write_text,
 )
+from .logging import configure_logging, get_logger
 from .validators import (
     ValidationError,
     estimate_reading_time,
@@ -16,7 +17,6 @@ from .validators import (
     validate_project_name,
     validate_voice_over_script,
 )
-from .logging import configure_logging, get_logger
 
 __all__ = [
     # Validators

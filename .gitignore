@@ -35,6 +35,10 @@ uv.lock
 htmlcov/
 *.cover
 
+# Type checking and linting
+.mypy_cache/
+.ruff_cache/
+
 # IDE
 .vscode/
 .idea/
@@ -58,6 +62,11 @@ logs/*
 
 # Exports
 exports/
+
+# Test artifacts
+downloaded_video.mp4
+my_video.mp4
+test_video_download.py
 
 # OS
 .DS_Store

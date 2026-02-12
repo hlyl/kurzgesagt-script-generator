@@ -20,7 +20,6 @@ from kurzgesagt.core import (
     ResolveExporter,
     SceneParser,
     ScriptGenerator,
-    VideoGenerator,
     VideoGenerationError,
 )
 from kurzgesagt.core.image_generator import ImageGenerator
@@ -38,11 +37,11 @@ from kurzgesagt.models.enums import (
 )
 from kurzgesagt.utils import (
     ValidationError,
-    estimate_reading_time,
-    get_project_path,
-    get_logger,
     configure_logging,
     ensure_directory,
+    estimate_reading_time,
+    get_logger,
+    get_project_path,
     validate_optional_text,
     validate_project_name,
     validate_voice_over_script,
@@ -1046,7 +1045,6 @@ def generate_selected_image(config: ProjectConfig, index: int) -> None:
     reference_payload = _load_reference_image_payload(config, project_dir)
 
     try:
-        scene_index = 0
         running = 0
         selected_scene = None
         selected_shot = None
@@ -1473,9 +1471,10 @@ def generate_full_audio(
             st.error("❌ No scenes found in preview text")
             return
 
-        from pydub import AudioSegment
-        from io import BytesIO
         import json
+        from io import BytesIO
+
+        from pydub import AudioSegment
 
         combined_audio = AudioSegment.empty()
         total_scenes = len(scene_data)
@@ -1913,7 +1912,7 @@ def render_export_tab(config: ProjectConfig) -> None:
             help="Timeline frame rate for DaVinci Resolve project"
         )
 
-        resolution = st.selectbox(
+        _resolution = st.selectbox(
             "Resolution",
             options=["1080p (1920x1080)", "4K (3840x2160)", "720p (1280x720)"],
             index=0,
@@ -2234,7 +2233,6 @@ def export_complete_package(
 ) -> None:
     """Export complete project package as ZIP file."""
     import zipfile
-    import shutil
     from datetime import datetime
 
     status = st.status("Creating project package...", expanded=True)
@@ -2807,7 +2805,7 @@ def generate_all_videos(
 
                     if uri:
                         # Provide download command
-                        download_cmd = f'python download_video.py "{uri}" "scene_{scene:02d}_shot_{shot:02d}.mp4"'
+                        download_cmd = f'python scripts/download_video.py "{uri}" "scene_{scene:02d}_shot_{shot:02d}.mp4"'
                         st.code(download_cmd, language="bash")
                         st.caption("Run this command in your terminal to download the video")
 
