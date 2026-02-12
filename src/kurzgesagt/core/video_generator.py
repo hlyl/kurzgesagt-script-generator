@@ -44,13 +44,11 @@ class VideoGenerator:
     Uses image-to-video generation with 9:16 aspect ratio and 8-second duration.
     """
 
-    def __init__(self, api_key: Optional[str] = None, drive_uploader=None, keep_local_copy: bool = True):
-        """Initialize with Gemini API key and optional Google Drive uploader.
+    def __init__(self, api_key: Optional[str] = None):
+        """Initialize with Gemini API key.
 
         Args:
             api_key: Gemini API key (same as image generation)
-            drive_uploader: Optional GoogleDriveUploader instance for auto-upload
-            keep_local_copy: Whether to keep local copy after Drive upload (default: True)
 
         Raises:
             VideoGenerationError: If API key is not provided
@@ -58,15 +56,9 @@ class VideoGenerator:
         if not api_key:
             raise VideoGenerationError("Gemini API key is required")
 
+        self.api_key = api_key
         self.client = genai.Client(api_key=api_key)
-        self.drive_uploader = drive_uploader
-        self.keep_local_copy = keep_local_copy
         logger.info("VideoGenerator initialized with Gemini API")
-
-        if self.drive_uploader and self.drive_uploader.is_configured():
-            logger.info("Google Drive uploader is configured and ready")
-            if not self.keep_local_copy:
-                logger.info("Local copies will be deleted after Drive upload")
 
     def generate_video_from_image(
         self,
@@ -105,7 +97,7 @@ class VideoGenerator:
         # Construct enhanced prompt
         elements_str = ", ".join(key_elements) if key_elements else "all elements"
         enhanced_prompt = self._build_video_prompt(
-            video_prompt, elements_str, style_context
+            video_prompt, elements_str, style_context, duration
         )
 
         logger.debug(f"Video prompt: {enhanced_prompt[:200]}...")
@@ -121,7 +113,7 @@ class VideoGenerator:
                 ),
                 config=types.GenerateVideosConfig(
                     aspectRatio="9:16",
-                    durationSeconds=8
+                    durationSeconds=duration
                 )
             )
         except Exception as e:
@@ -171,13 +163,17 @@ class VideoGenerator:
                 # Download video from URI (signed URL from Google Cloud Storage)
                 logger.info(f"Downloading video from URI...")
                 try:
+                    # Include API key in headers for authentication
+                    headers = {
+                        "x-goog-api-key": self.api_key
+                    }
                     # Use requests for better error handling and redirect support
-                    response = requests.get(video.uri, timeout=300)
+                    response = requests.get(video.uri, headers=headers, timeout=300, stream=True)
                     response.raise_for_status()
                     video_data = response.content
                     logger.info(f"Video downloaded successfully ({len(video_data)} bytes)")
                     return VideoResult(video_bytes=video_data)
-                    
+
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 403:
                         # 403 Forbidden - video generated but can't auto-download
@@ -199,14 +195,14 @@ class VideoGenerator:
                             uri=video.uri,
                             requires_manual_download=True
                         )
-                        
+
                 except requests.exceptions.Timeout:
                     logger.warning("Download timed out. Returning URI for manual download.")
                     return VideoResult(
                         uri=video.uri,
                         requires_manual_download=True
                     )
-                    
+
                 except Exception as e:
                     logger.error(f"Failed to download video: {e}. Returning URI for manual download.")
                     return VideoResult(
@@ -225,7 +221,8 @@ class VideoGenerator:
         self,
         base_prompt: str,
         key_elements: str,
-        style_context: str
+        style_context: str,
+        duration: int
     ) -> str:
         """Build enhanced video prompt with style and animation guidance.
 
@@ -233,6 +230,7 @@ class VideoGenerator:
             base_prompt: Original video_prompt from shot
             key_elements: Comma-separated key elements to animate
             style_context: Aesthetic description with animation specs
+            duration: Video duration in seconds
 
         Returns:
             Enhanced prompt string
@@ -244,7 +242,7 @@ class VideoGenerator:
             style_context[:500],  # Limit style context to 500 chars
             "\nCamera movement: Smooth cinematic motion with subtle zoom and parallax effects.",
             "Maintain visual consistency with the starting image while adding dynamic movement.",
-            "Duration: 8 seconds with consistent pacing throughout."
+            f"Duration: {duration} seconds with consistent pacing throughout."
         ]
 
         return "\n".join(prompt_parts)
@@ -257,7 +255,8 @@ class VideoGenerator:
         image_path: Path,
         video_prompt: str,
         key_elements: List[str],
-        style_context: str
+        style_context: str,
+        duration: int = 8
     ) -> Union[Path, str, dict]:
         """Generate and save video for a specific shot.
 
@@ -269,22 +268,25 @@ class VideoGenerator:
             video_prompt: Video animation prompt
             key_elements: Elements to animate
             style_context: Style description
+            duration: Video duration in seconds (default: 8, max: 8)
 
         Returns:
             Path: Saved video file path if successful
             str: Download URI if automatic download failed
-            dict: Contains 'local_path' and 'drive_file_id' if uploaded to Drive
 
         Raises:
             VideoGenerationError: If generation fails
         """
+        # Ensure duration doesn't exceed API limit
+        duration = min(duration, 8)
+
         # Generate video
         result = self.generate_video_from_image(
             image_path=image_path,
             video_prompt=video_prompt,
             key_elements=key_elements,
             style_context=style_context,
-            duration=8,
+            duration=duration,
             aspect_ratio="9:16"
         )
 
@@ -299,40 +301,6 @@ class VideoGenerator:
             try:
                 video_path.write_bytes(result.video_bytes)
                 logger.info(f"Saved video to {video_path}")
-
-                # Upload to Google Drive if configured
-                if self.drive_uploader and self.drive_uploader.is_configured():
-                    try:
-                        folder_name = f"scene_{scene_number:02d}"
-                        drive_file_id = self.drive_uploader.upload_video(
-                            video_path=video_path,
-                            folder_name=folder_name,
-                            file_name=f"shot_{shot_number:02d}.mp4"
-                        )
-
-                        logger.info(f"Uploaded to Google Drive (ID: {drive_file_id})")
-
-                        drive_result = {
-                            'drive_file_id': drive_file_id,
-                            'drive_link': self.drive_uploader.get_file_link(drive_file_id)
-                        }
-
-                        # Delete local file if keep_local_copy is False
-                        if not self.keep_local_copy:
-                            try:
-                                video_path.unlink()
-                                logger.info(f"Deleted local copy: {video_path}")
-                            except Exception as e:
-                                logger.warning(f"Failed to delete local file: {e}")
-                        else:
-                            # Include local path only if keeping it
-                            drive_result['local_path'] = video_path
-
-                        return drive_result
-                    except Exception as e:
-                        logger.warning(f"Failed to upload to Google Drive: {e}")
-                        # Continue and return local path only
-
                 return video_path
 
             except Exception as e:

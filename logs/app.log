@@ -1142,3 +1142,37 @@ The video was generated successfully but cannot be downloaded automatically.
 2026-02-11 15:36:16,462 | INFO | kurzgesagt.video_generator | Downloading video from URI...
 2026-02-11 15:36:16,817 | WARNING | kurzgesagt.video_generator | Video generated successfully but automatic download failed (HTTP 403). Returning URI for manual download.
 2026-02-11 15:36:16,817 | INFO | kurzgesagt.video_generator | Video generated but requires manual download. URI available for scene 2, shot 2
+2026-02-12 16:52:39,064 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-12 16:52:39,064 | INFO | kurzgesagt.video_generator | Generating video from /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/images/scene_02/shot_02.png
+2026-02-12 16:52:40,817 | INFO | kurzgesagt.video_generator | Polling for video generation completion...
+2026-02-12 16:53:43,109 | INFO | kurzgesagt.video_generator | Still generating... (60s elapsed)
+2026-02-12 16:53:43,109 | INFO | kurzgesagt.video_generator | Downloading video from URI...
+2026-02-12 16:53:43,451 | WARNING | kurzgesagt.video_generator | Video generated successfully but automatic download failed (HTTP 403). Returning URI for manual download.
+2026-02-12 16:53:43,452 | INFO | kurzgesagt.video_generator | Video generated but requires manual download. URI available for scene 2, shot 2
+2026-02-12 17:07:56,396 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-12 17:07:56,396 | INFO | kurzgesagt.video_generator | Generating video from /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/images/scene_02/shot_02.png
+2026-02-12 17:07:58,480 | INFO | kurzgesagt.video_generator | Polling for video generation completion...
+2026-02-12 17:09:00,587 | INFO | kurzgesagt.video_generator | Still generating... (60s elapsed)
+2026-02-12 17:09:00,588 | INFO | kurzgesagt.video_generator | Downloading video from URI...
+2026-02-12 17:09:00,908 | WARNING | kurzgesagt.video_generator | Video generated successfully but automatic download failed (HTTP 403). Returning URI for manual download.
+2026-02-12 17:09:00,909 | INFO | kurzgesagt.video_generator | Video generated but requires manual download. URI available for scene 2, shot 2
+2026-02-12 17:34:48,470 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-12 17:34:48,470 | INFO | kurzgesagt.video_generator | Generating video from /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/images/scene_03/shot_01.png
+2026-02-12 17:34:50,622 | INFO | kurzgesagt.video_generator | Polling for video generation completion...
+2026-02-12 17:35:52,560 | INFO | kurzgesagt.video_generator | Still generating... (60s elapsed)
+2026-02-12 17:35:52,561 | INFO | kurzgesagt.video_generator | Downloading video from URI...
+2026-02-12 17:35:52,929 | WARNING | kurzgesagt.video_generator | Video generated successfully but automatic download failed (HTTP 403). Returning URI for manual download.
+2026-02-12 17:35:52,930 | INFO | kurzgesagt.video_generator | Video generated but requires manual download. URI available for scene 3, shot 1
+2026-02-12 17:44:12,451 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-12 17:44:12,452 | INFO | kurzgesagt.video_generator | Generating video from /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/images/scene_03/shot_01.png
+2026-02-12 17:44:14,165 | INFO | kurzgesagt.video_generator | Polling for video generation completion...
+2026-02-12 17:45:06,160 | INFO | kurzgesagt.video_generator | Downloading video from URI...
+2026-02-12 17:45:06,479 | WARNING | kurzgesagt.video_generator | Video generated successfully but automatic download failed (HTTP 403). Returning URI for manual download.
+2026-02-12 17:45:06,480 | INFO | kurzgesagt.video_generator | Video generated but requires manual download. URI available for scene 3, shot 1
+2026-02-12 17:50:10,627 | INFO | kurzgesagt.video_generator | VideoGenerator initialized with Gemini API
+2026-02-12 17:50:10,627 | INFO | kurzgesagt.video_generator | Generating video from /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/images/scene_06/shot_02.png
+2026-02-12 17:50:12,878 | INFO | kurzgesagt.video_generator | Polling for video generation completion...
+2026-02-12 17:51:15,042 | INFO | kurzgesagt.video_generator | Still generating... (60s elapsed)
+2026-02-12 17:51:25,391 | INFO | kurzgesagt.video_generator | Downloading video from URI...
+2026-02-12 17:51:26,456 | INFO | kurzgesagt.video_generator | Video downloaded successfully (1764715 bytes)
+2026-02-12 17:51:26,458 | INFO | kurzgesagt.video_generator | Saved video to /home/vtxgaming/dev/kurzgesagt-script-generator/projects/Security_tradeoff/videos/scene_06/shot_02.mp4

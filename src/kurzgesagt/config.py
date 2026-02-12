@@ -54,17 +54,6 @@ class Settings(BaseSettings):
     gemini_image_aspect_ratio: str = "1:1"
     gemini_image_resolution: str = "1K"
 
-    # Google Drive Settings
-    google_drive_enabled: bool = False
-    google_drive_folder_id: Optional[str] = Field(
-        default=None, description="Google Drive folder ID for video uploads"
-    )
-    google_drive_credentials_path: Optional[str] = Field(
-        default=None, description="Path to Google Drive OAuth2 credentials JSON"
-    )
-    google_drive_token_path: str = "token.json"
-    google_drive_keep_local_copy: bool = False
-
     scene_parser_provider: str = "anthropic"
 
     # Streamlit
